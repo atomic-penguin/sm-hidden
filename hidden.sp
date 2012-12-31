@@ -7,8 +7,16 @@
 #include <sdkhooks>
 #define REQUIRE_EXTENSIONS
 
-#define PLUGIN_VERSION "2.0"
-#define PLUGIN_PREFIX "\x04[The Hidden]\x01"
+/*
+ * Original code by Matheus28,
+ * http://forums.alliedmods.net/showthread.php?t=143577
+ */
+
+#define PLUGIN_AUTHOR "atomic-penguin"
+#define PLUGIN_VERSION "2.1.0"
+#define PLUGIN_NAME "TF2 Hidden"
+#define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
+#define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
 
 #define TICK_INTERVAL 0.1
 
@@ -52,11 +60,11 @@
 
 
 public Plugin:myinfo = {
-	name = "The Hidden",
-	author = "Matheus28",
-	description = "",
+	name = PLUGIN_NAME,
+	author = PLUGIN_AUTHOR,
+	description = PLUGIN_DESCRIPTION,
 	version = PLUGIN_VERSION,
-	url = ""
+	url = PLUGIN_URL
 }
 
 
@@ -191,9 +199,9 @@ public Action:Cmd_NextHidden(client, args){
 	if(!started) return Plugin_Continue;
 	if(args<1){
 		if(GetCmdReplySource()==SM_REPLY_TO_CHAT){
-			ReplyToCommand(client, "%s Usage: /nexthidden <player>", PLUGIN_PREFIX);
+			ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
 		}else{
-			ReplyToCommand(client, "%s Usage: sm_nexthidden <player>", PLUGIN_PREFIX);
+			ReplyToCommand(client, "\x04[%s]\x01 Usage: sm_nexthidden <player>", PLUGIN_NAME);
 		}
 		return Plugin_Handled;
 	}
@@ -207,7 +215,7 @@ public Action:Cmd_NextHidden(client, args){
 	
 	forceNextHidden = GetClientUserId(target);
 	
-	PrintToChat(client, "%s The next hidden will be \x03%N\x01", PLUGIN_PREFIX, target);
+	PrintToChat(client, "\x04[%s]\x01 The next hidden will be \x03%N\x01", PLUGIN_NAME, target);
 	
 	return Plugin_Handled;
 }
@@ -263,7 +271,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 			TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
 			CreateTimer(0.1, Timer_Respawn, client);
 			if(playing){
-				PrintToChat(client, "%s You cannot use this class on team IRIS", PLUGIN_PREFIX);
+				PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
 			}
 		}
 	}
@@ -299,7 +307,7 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
 	if(victim==hidden){
 		hiddenHp=0;
 		RemoveHiddenPowers(victim);
-		PrintToChatAll("%s \x03The Hidden\x01 was killed!", PLUGIN_PREFIX);
+		PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
 	}else{
 		if(hidden!=0 && attacker==hidden){
 			hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
@@ -310,7 +318,7 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
 			if(hiddenHp>hiddenHpMax){
 				hiddenHp=hiddenHpMax;
 			}
-			PrintToChatAll("%s \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_PREFIX, victim);
+			PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
 			CreateTimer(0.1, Timer_Dissolve, victim);
 		}
 	}
@@ -348,7 +356,7 @@ public OnGameFrame(){
 				hiddenAwayTime+=tickInterval;
 				if(hiddenAwayTime>HIDDEN_AWAY_TIME){
 					ForcePlayerSuicide(i);
-					PrintToChatAll("%s \x03The Hidden\x01 was killed because he was away", PLUGIN_PREFIX);
+					PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed because he was away", PLUGIN_NAME);
 					continue;
 				}
 			}
@@ -364,7 +372,7 @@ public OnGameFrame(){
 				if(hiddenInvisibility<0.0){
 					hiddenInvisibility=0.0;
 					ForcePlayerSuicide(i);
-					PrintToChatAll("%s \x03The Hidden\x01 lost his powers!", PLUGIN_PREFIX);
+					PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 lost his powers!", PLUGIN_NAME);
 					continue;
 				}
 			}
@@ -599,7 +607,7 @@ stock NewGame(){
 			if(respawn){
 				CreateTimer(0.1, Timer_Respawn, i);
 			}
-			PrintToChat(i, "%s \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_PREFIX, hidden);
+			PrintToChat(i, "\x04[%s]\x01 \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_NAME, hidden);
 		}
 	}
 	newHidden=true;
@@ -674,8 +682,8 @@ stock SelectHidden(){
 		TF2_RespawnPlayer(hidden);
 	}
 	
-	PrintToChat(hidden, "%s You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_PREFIX);
-	PrintToChat(hidden, "\x03Right click to use the super jump or stick to walls, Press R to use your special\x01", PLUGIN_PREFIX);
+	PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
+	PrintToChat(hidden, "\x04[%s]\x01 \x03Right click to use the super jump or stick to walls, Press R to use your special\x01", PLUGIN_NAME);
 	
 	return hidden;
 }
