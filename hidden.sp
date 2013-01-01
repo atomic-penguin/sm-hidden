@@ -116,7 +116,7 @@ public OnPluginStart(){
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
 
 	//cvar for setting hidden health
-	CreateConVar("sm_hidden_health", "500", "Default hidden health");
+	sm_hidden_health = CreateConVar("sm_hidden_health", "500", "Default hidden health");
 	
 	HookConVarChange(cv_enable, CC_Enable);
 }
