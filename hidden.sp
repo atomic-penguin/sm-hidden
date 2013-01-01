@@ -267,7 +267,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 		}
 		newHidden=true;
 	}else{
-		if(class==TFClass_Spy || class==TFClass_Pyro){
+		if(class==TFClass_Spy || class==TFClass_Engineer){
 			TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
 			CreateTimer(0.1, Timer_Respawn, client);
 			if(playing){
@@ -428,19 +428,14 @@ public OnGameFrame(){
 						TF2_AddCondition(i, TFCond_Cloaked, -1.0);
 					}
 				}else{
-					if(TF2_IsPlayerInCondition(i, TFCond_Cloaked)){
-						TF2_RemoveCondition(i, TFCond_Cloaked);
-					}
-				}
-			}else{
-				if(TF2_IsPlayerInCondition(i, TFCond_Cloaked)){
 					TF2_RemoveCondition(i, TFCond_Cloaked);
 				}
+			}else{
+				TF2_RemoveCondition(i, TFCond_Cloaked);
 			}
 			
-            TF2_RemoveCondition(i, TFCond_DeadRingered);
-			
-		    TF2_RemoveCondition(i, TFCond_Kritzkrieged);
+			TF2_RemoveCondition(i, TFCond_DeadRingered);
+			TF2_RemoveCondition(i, TFCond_Kritzkrieged);
 			
 			if(TF2_IsPlayerInCondition(i, TFCond_OnFire)){
 				AddHiddenVisible(0.5);
@@ -500,12 +495,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		new bool:changed=false;
 		
 		if(hiddenStick && hiddenStamina<HIDDEN_STAMINA_TIME-0.5){
-			if((buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0){
+			if(buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP > 0)
+			{
 				HiddenUnstick();
 			}
 		}
 		
-		if(hiddenAway && ((buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)){
+		if(hiddenAway && (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)
+		{
 			hiddenAway=false;
 		}
 		
@@ -627,8 +624,6 @@ stock SelectHidden(){
 			if(!IsClientInGame(i)) continue;
 			if(!IsClientPlaying(i)) continue;
 			if(IsFakeClient(i)) continue;
-			//if(IsClientSourceTV(i)) continue;
-			//if(IsClientReplay(i)) continue;
 			if(IsClientInKickQueue(i)) continue;
 			if(IsClientTimingOut(i)) continue;
 			if(GetClientUserId(i)==lastHiddenUserid) continue;
@@ -648,8 +643,7 @@ stock SelectHidden(){
 			for(new i=1;i<=MaxClients;++i){
 				if(!IsClientInGame(i)) continue;
 				if(!IsClientPlaying(i)) continue;
-				if(IsClientSourceTV(i)) continue;
-				if(IsClientReplay(i)) continue;
+				if(IsFakeClient(i)) continue;
 				clients[clientsCount++]=i;
 			}
 		}
@@ -667,10 +661,9 @@ stock SelectHidden(){
 	if(!IsPlayerAlive(hidden)){
 		TF2_RespawnPlayer(hidden);
 	}
-
-    //see about replacing these with hint text using %attack2% and %reload%	
+	
 	PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
-	PrintToChat(hidden, "\x04[%s]\x01 \x03alt-attack to super jump or stick to walls, press reload to use boo\x01", PLUGIN_NAME);
+	PrintToChat(hidden, "\x04[%s]\x01 \x03%attack2% to use the super jump or stick to walls, Press %reload% to use your stun attack.\x01", PLUGIN_NAME);
 	
 	return hidden;
 }
