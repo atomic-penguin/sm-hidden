@@ -112,6 +112,9 @@ public OnPluginStart(){
 	FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
+
+	//cvar for setting hidden health between 125 and 1500 (default 500), value will be used in SelectHidden()
+	sm_hidden_health = CreateConVar("sm_hidden_health", "500", "Default hidden health", 0, true, 125, true, 1500);
 	
 	HookConVarChange(cv_enable, CC_Enable);
 }
@@ -598,7 +601,7 @@ stock NewGame(){
 
 stock SelectHidden(){
 	hidden=0;
-	hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
+	hiddenHpMax=GetConVarInt(sm_hidden_health)+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
 	hiddenHp=hiddenHpMax;
 	hiddenVisible=0.0;
 	hiddenStamina=HIDDEN_STAMINA_TIME;
