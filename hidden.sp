@@ -267,7 +267,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 		}
 		newHidden=true;
 	}else{
-		if(class==TFClass_Spy || class==TFClass_Engineer){
+		if(class==TFClass_Spy || class==TFClass_Pyro){
 			TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
 			CreateTimer(0.1, Timer_Respawn, client);
 			if(playing){
