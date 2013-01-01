@@ -102,6 +102,8 @@ new bool:started;
 
 new Handle:cv_enable;
 
+new Handle:sm_hidden_health = INVALID_HANDLE
+
 public OnPluginStart(){
 	LoadTranslations("common.phrases");
 	
@@ -113,8 +115,8 @@ public OnPluginStart(){
 	
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
 
-	//cvar for setting hidden health between 125 and 1500 (default 500), value will be used in SelectHidden()
-	sm_hidden_health = CreateConVar("sm_hidden_health", "500", "Default hidden health", 0, true, 125, true, 1500);
+	//cvar for setting hidden health
+	CreateConVar("sm_hidden_health", "500", "Default hidden health");
 	
 	HookConVarChange(cv_enable, CC_Enable);
 }
