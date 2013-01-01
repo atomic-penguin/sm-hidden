@@ -500,12 +500,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		new bool:changed=false;
 		
 		if(hiddenStick && hiddenStamina<HIDDEN_STAMINA_TIME-0.5){
-			if(buttons & IN_FORWARD
-			|| buttons & IN_BACK
-			|| buttons & IN_MOVELEFT
-			|| buttons & IN_MOVERIGHT
-			|| buttons & IN_JUMP
-			){
+			if((buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0){
 				HiddenUnstick();
 			}
 		}
