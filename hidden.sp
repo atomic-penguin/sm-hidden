@@ -505,12 +505,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			}
 		}
 		
-		if(hiddenAway && (buttons & IN_FORWARD
-		|| buttons & IN_BACK
-		|| buttons & IN_MOVELEFT
-		|| buttons & IN_MOVERIGHT
-		|| buttons & IN_JUMP
-		)){
+		if(hiddenAway && ((buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)){
 			hiddenAway=false;
 		}
 		
