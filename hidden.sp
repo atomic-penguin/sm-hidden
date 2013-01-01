@@ -438,13 +438,9 @@ public OnGameFrame(){
 				}
 			}
 			
-			if(TF2_IsPlayerInCondition(i, TFCond_DeadRingered)){
-				TF2_RemoveCondition(i, TFCond_DeadRingered);
-			}
+            TF2_RemoveCondition(i, TFCond_DeadRingered);
 			
-			if(TF2_IsPlayerInCondition(i, TFCond_Kritzkrieged)){
-				TF2_RemoveCondition(i, TFCond_Kritzkrieged);
-			}
+		    TF2_RemoveCondition(i, TFCond_Kritzkrieged);
 			
 			if(TF2_IsPlayerInCondition(i, TFCond_OnFire)){
 				AddHiddenVisible(0.5);
