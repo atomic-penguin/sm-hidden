@@ -683,7 +683,7 @@ stock SelectHidden(){
 	}
 	
 	PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
-	PrintToChat(hidden, "\x04[%s]\x01 \x03Right click to use the super jump or stick to walls, Press R to use your special\x01", PLUGIN_NAME);
+	PrintToChat(hidden, "\x04[%s]\x01 \x03%attack2% to use the super jump or stick to walls, Press %reload% to use your stun attack.\x01", PLUGIN_NAME);
 	
 	return hidden;
 }
