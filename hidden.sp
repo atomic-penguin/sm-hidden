@@ -641,8 +641,8 @@ stock SelectHidden(){
 			if(!IsClientInGame(i)) continue;
 			if(!IsClientPlaying(i)) continue;
 			if(IsFakeClient(i)) continue;
-			if(IsClientSourceTV(i)) continue;
-			if(IsClientReplay(i)) continue;
+			//if(IsClientSourceTV(i)) continue;
+			//if(IsClientReplay(i)) continue;
 			if(IsClientInKickQueue(i)) continue;
 			if(IsClientTimingOut(i)) continue;
 			if(GetClientUserId(i)==lastHiddenUserid) continue;
