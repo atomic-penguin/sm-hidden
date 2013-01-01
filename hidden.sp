@@ -641,8 +641,6 @@ stock SelectHidden(){
 			if(!IsClientInGame(i)) continue;
 			if(!IsClientPlaying(i)) continue;
 			if(IsFakeClient(i)) continue;
-			//if(IsClientSourceTV(i)) continue;
-			//if(IsClientReplay(i)) continue;
 			if(IsClientInKickQueue(i)) continue;
 			if(IsClientTimingOut(i)) continue;
 			if(GetClientUserId(i)==lastHiddenUserid) continue;
@@ -662,8 +660,7 @@ stock SelectHidden(){
 			for(new i=1;i<=MaxClients;++i){
 				if(!IsClientInGame(i)) continue;
 				if(!IsClientPlaying(i)) continue;
-				if(IsClientSourceTV(i)) continue;
-				if(IsClientReplay(i)) continue;
+				if(IsFakeClient(i)) continue;
 				clients[clientsCount++]=i;
 			}
 		}
