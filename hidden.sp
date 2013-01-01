@@ -428,23 +428,14 @@ public OnGameFrame(){
 						TF2_AddCondition(i, TFCond_Cloaked, -1.0);
 					}
 				}else{
-					if(TF2_IsPlayerInCondition(i, TFCond_Cloaked)){
-						TF2_RemoveCondition(i, TFCond_Cloaked);
-					}
-				}
-			}else{
-				if(TF2_IsPlayerInCondition(i, TFCond_Cloaked)){
 					TF2_RemoveCondition(i, TFCond_Cloaked);
 				}
+			}else{
+				TF2_RemoveCondition(i, TFCond_Cloaked);
 			}
 			
-			if(TF2_IsPlayerInCondition(i, TFCond_DeadRingered)){
-				TF2_RemoveCondition(i, TFCond_DeadRingered);
-			}
-			
-			if(TF2_IsPlayerInCondition(i, TFCond_Kritzkrieged)){
-				TF2_RemoveCondition(i, TFCond_Kritzkrieged);
-			}
+			TF2_RemoveCondition(i, TFCond_DeadRingered);
+			TF2_RemoveCondition(i, TFCond_Kritzkrieged);
 			
 			if(TF2_IsPlayerInCondition(i, TFCond_OnFire)){
 				AddHiddenVisible(0.5);
