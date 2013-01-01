@@ -681,9 +681,10 @@ stock SelectHidden(){
 	if(!IsPlayerAlive(hidden)){
 		TF2_RespawnPlayer(hidden);
 	}
-	
+
+    //see about replacing these with hint text using %attack2% and %reload%	
 	PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
-	PrintToChat(hidden, "\x04[%s]\x01 \x03Right click to use the super jump or stick to walls, Press R to use your special\x01", PLUGIN_NAME);
+	PrintToChat(hidden, "\x04[%s]\x01 \x03alt-attack to super jump or stick to walls, press reload to use boo\x01", PLUGIN_NAME);
 	
 	return hidden;
 }
