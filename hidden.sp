@@ -248,7 +248,7 @@ public Action:Timer_ResetHidden(Handle:timer){
 
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast){
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(!client|!IsClientInGame(client)|IsFakeClient(client) > 0) return;
+	if((!client|!IsClientInGame(client)|IsFakeClient(client)) > 0) return;
 	new HTeam:team = HTeam:GetEventInt(event, "team");
 	
 	if(client != hidden && team==HTeam_Hidden){
