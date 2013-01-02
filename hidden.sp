@@ -4,6 +4,10 @@
 #include <tf2_stocks>
 
 #undef REQUIRE_EXTENSIONS
+#tryinclude <steamtools>
+#define REQUIRE_EXTENSIONS
+
+#undef REQUIRE_EXTENSIONS
 #include <sdkhooks>
 #define REQUIRE_EXTENSIONS
 
@@ -1009,6 +1013,7 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 {
 	cvar_enabled = GetConVarBool(cvar);
 	if (cvar_enabled) {
+	    CheckEnable();
 	    PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
 	    #if defined _steamtools_included
 	    if (steamtools) {
