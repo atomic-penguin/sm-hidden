@@ -97,6 +97,7 @@ new bool:newHidden;
 new bool:playing;
 
 #if defined _steamtools_included
+new bool:steamtools = false;
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	MarkNativeAsOptional("Steam_SetGameDescription");
@@ -126,6 +127,10 @@ public OnPluginStart(){
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
 	
 	//HookConVarChange(cv_enable, CC_Enable);
+
+    #if defined _steamtools_included
+        steamtools = LibraryExists("SteamTools");
+	#endif
 
 	cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	HookConVarChange(cv_enabled, cvhook_enabled);
@@ -1046,4 +1051,24 @@ public Action:Command_DisableHidden(client, args)
 	ServerCommand("tf2_hidden_enabled 0");
 	ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
 	return Plugin_Handled;
+}
+
+public OnLibraryAdded(const String:name[])
+{
+	#if defined _steamtools_included
+	if (StrEqual(name, "SteamTools"))
+	{
+	    steamtools = true;
+	}
+	#endif
+}
+
+public OnLibraryRemoved(const String:name[])
+{
+	#if defined _steamtools_included
+	if (StrEqual(name, "SteamTools"))
+	{
+	    steamtools = false;
+	}
+	#endif
 }
