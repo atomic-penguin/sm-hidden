@@ -1009,16 +1009,16 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 {
 	cvar_enabled = GetConVarBool(cvar);
 	if (cvar_enabled) {
-	    PrintToChatAll("[TF2-HIDDEN] Enabled!");
+	    PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
 	    #if defined _steamtools_included
 	    if (steamtools) {
 	    	decl String:gameDesc[64];
-	    	Format(gameDesc, sizeof(gameDesc), "TF2 HIDDEN v%s", PLUGIN_VERSION);
+	    	Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
 	        Steam_SetGameDescription(gameDesc);
 		}
 	    #endif 
 	} else {
-	    PrintToChatAll("[TF2-HIDDEN] Disabled!");
+	    PrintToChatAll("[%s] Disabled!", PLUGIN_NAME);
 	    #if defined _steamtools_included
 	    if (steamtools) {
 	        Steam_SetGameDescription("Team Fortress");
@@ -1031,7 +1031,7 @@ public Action:Command_EnableHidden(client, args)
 {
 	if (cvar_enabled) return Plugin_Handled;
 	ServerCommand("tf2_hidden_enabled 1");
-	ReplyToCommand(client, "[HIDDEN] Enabled.");
+	ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
 	return Plugin_Handled;
 }
 
@@ -1039,6 +1039,6 @@ public Action:Command_DisableHidden(client, args)
 {
 	if (!cvar_enabled) return Plugin_Handled;
 	ServerCommand("tf2_hidden_enabled 0");
-	ReplyToCommand(client, "[HIDDEN] Disabled.");
+	ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
 	return Plugin_Handled;
 }
