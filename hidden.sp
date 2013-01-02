@@ -92,6 +92,13 @@ new Float:hiddenAwayTime;
 new bool:newHidden;
 new bool:playing;
 
+#if defined _steamtools_included
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	MarkNativeAsOptional("Steam_SetGameDescription");
+	return APLRes_Success;
+}
+#endif
 
 new forceNextHidden;
 
@@ -100,7 +107,8 @@ new Handle:t_tick;
 
 new bool:started;
 
-new Handle:cv_enable;
+new bool:cvar_enabled;
+new Handle:cv_enabled
 
 public OnPluginStart(){
 	LoadTranslations("common.phrases");
@@ -108,12 +116,20 @@ public OnPluginStart(){
 	ResetConVar(CreateConVar("sm_hidden_version", PLUGIN_VERSION, "The Hidden Version",
 	FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY), true, true);
 	
-	cv_enable = CreateConVar("sm_hidden_enable", "1.0", "Enables/Disables Hidden",
-	FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	//cv_enable = CreateConVar("sm_hidden_enable", "1.0", "Enables/Disables Hidden",
+	//FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
 	
-	HookConVarChange(cv_enable, CC_Enable);
+	//HookConVarChange(cv_enable, CC_Enable);
+
+	cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	HookConVarChange(cv_enabled, cvhook_enabled);
+	cvar_enabled = GetConVarBool(cv_enabled);
+    
+	RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
+	RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
+ 
 }
 
 public StartPlugin(){
@@ -188,7 +204,7 @@ public CC_Enable(Handle:convar, const String:oldValue[], const String:newValue[]
 }
 
 public CheckEnable(){
-	if(IsArenaMap() && GetConVarBool(cv_enable)){
+	if(IsArenaMap() && GetConVarBool(cv_enabled)){
 		StartPlugin();
 	}else{
 		StopPlugin();
@@ -985,4 +1001,44 @@ stock Dissolve(client, type){
 		AcceptEntityInput(ent, "Dissolve", ragdoll, ragdoll);
 		AcceptEntityInput(ent, "Kill");
 	}
+}
+
+////
+
+public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
+{
+	cvar_enabled = GetConVarBool(cvar);
+	if (cvar_enabled) {
+	    PrintToChatAll("[TF2-HIDDEN] Enabled!");
+	    #if defined _steamtools_included
+	    if (steamtools) {
+	    	decl String:gameDesc[64];
+	    	Format(gameDesc, sizeof(gameDesc), "TF2 HIDDEN v%s", PLUGIN_VERSION);
+	        Steam_SetGameDescription(gameDesc);
+		}
+	    #endif 
+	} else {
+	    PrintToChatAll("[TF2-HIDDEN] Disabled!");
+	    #if defined _steamtools_included
+	    if (steamtools) {
+	        Steam_SetGameDescription("Team Fortress");
+	    }
+	    #endif
+	}
+}
+
+public Action:Command_EnableHidden(client, args)
+{
+	if (cvar_enabled) return Plugin_Handled;
+	ServerCommand("tf2_hidden_enabled 1");
+	ReplyToCommand(client, "[HIDDEN] Enabled.");
+	return Plugin_Handled;
+}
+
+public Action:Command_DisableHidden(client, args)
+{
+	if (!cvar_enabled) return Plugin_Handled;
+	ServerCommand("tf2_hidden_enabled 0");
+	ReplyToCommand(client, "[HIDDEN] Disabled.");
+	return Plugin_Handled;
 }
