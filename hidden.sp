@@ -4,6 +4,10 @@
 #include <tf2_stocks>
 
 #undef REQUIRE_EXTENSIONS
+#tryinclude <steamtools>
+#define REQUIRE_EXTENSIONS
+
+#undef REQUIRE_EXTENSIONS
 #include <sdkhooks>
 #define REQUIRE_EXTENSIONS
 
