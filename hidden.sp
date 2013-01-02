@@ -102,8 +102,6 @@ new bool:started;
 
 new Handle:cv_enable;
 
-new Handle:sm_hidden_health = INVALID_HANDLE
-
 public OnPluginStart(){
 	LoadTranslations("common.phrases");
 	
@@ -114,9 +112,6 @@ public OnPluginStart(){
 	FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	
 	RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
-
-	//cvar for setting hidden health
-	sm_hidden_health = CreateConVar("sm_hidden_health", "500", "Default hidden health");
 	
 	HookConVarChange(cv_enable, CC_Enable);
 }
@@ -253,7 +248,7 @@ public Action:Timer_ResetHidden(Handle:timer){
 
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast){
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(!client || IsClientInGame(client)) return;
+        if(!client || !IsClientInGame(client) || IsFakeClient(client)) return;	
 	new HTeam:team = HTeam:GetEventInt(event, "team");
 	
 	if(client != hidden && team==HTeam_Hidden){
@@ -603,7 +598,7 @@ stock NewGame(){
 
 stock SelectHidden(){
 	hidden=0;
-	hiddenHpMax=GetConVarInt(sm_hidden_health)+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
+	hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
 	hiddenHp=hiddenHpMax;
 	hiddenVisible=0.0;
 	hiddenStamina=HIDDEN_STAMINA_TIME;
