@@ -2,10 +2,7 @@
 #include <sdktools>
 #include <tf2>
 #include <tf2_stocks>
-
-#undef REQUIRE_EXTENSIONS
-#tryinclude <steamtools>
-#define REQUIRE_EXTENSIONS
+#include <steamtools>
 
 #undef REQUIRE_EXTENSIONS
 #include <sdkhooks>
@@ -96,14 +93,7 @@ new Float:hiddenAwayTime;
 new bool:newHidden;
 new bool:playing;
 
-#if defined _steamtools_included
 new bool:steamtools = false;
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
-{
-	MarkNativeAsOptional("Steam_SetGameDescription");
-	return APLRes_Success;
-}
-#endif
 
 new forceNextHidden;
 
@@ -112,8 +102,7 @@ new Handle:t_tick;
 
 new bool:started;
 
-new bool:cvar_enabled;
-new Handle:cv_enabled
+new Handle:cv_enabled = INVALID_HANDLE;
 
 public OnPluginStart(){
 	LoadTranslations("common.phrases");
@@ -128,13 +117,10 @@ public OnPluginStart(){
 	
 	//HookConVarChange(cv_enable, CC_Enable);
 
-    #if defined _steamtools_included
-        steamtools = LibraryExists("SteamTools");
-	#endif
+	steamtools = LibraryExists("SteamTools");
 
 	cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	HookConVarChange(cv_enabled, cvhook_enabled);
-	cvar_enabled = GetConVarBool(cv_enabled);
     
 	RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
 	RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
@@ -1016,30 +1002,25 @@ stock Dissolve(client, type){
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 {
-	cvar_enabled = GetConVarBool(cvar);
-	if (cvar_enabled) {
+	if (GetConVarBool(cv_enabled)) {
 	    CheckEnable();
 	    PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
-	    #if defined _steamtools_included
 	    if (steamtools) {
 	    	decl String:gameDesc[64];
 	    	Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
 	        Steam_SetGameDescription(gameDesc);
 		}
-	    #endif 
 	} else {
 	    PrintToChatAll("[%s] Disabled!", PLUGIN_NAME);
-	    #if defined _steamtools_included
 	    if (steamtools) {
 	        Steam_SetGameDescription("Team Fortress");
 	    }
-	    #endif
 	}
 }
 
 public Action:Command_EnableHidden(client, args)
 {
-	if (cvar_enabled) return Plugin_Handled;
+	if (GetConVarBool(cv_enabled)) return Plugin_Handled;
 	ServerCommand("tf2_hidden_enabled 1");
 	ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
 	return Plugin_Handled;
@@ -1047,7 +1028,7 @@ public Action:Command_EnableHidden(client, args)
 
 public Action:Command_DisableHidden(client, args)
 {
-	if (!cvar_enabled) return Plugin_Handled;
+	if (!(GetConVarBool(cv_enabled))) return Plugin_Handled;
 	ServerCommand("tf2_hidden_enabled 0");
 	ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
 	return Plugin_Handled;
@@ -1055,20 +1036,16 @@ public Action:Command_DisableHidden(client, args)
 
 public OnLibraryAdded(const String:name[])
 {
-	#if defined _steamtools_included
 	if (StrEqual(name, "SteamTools"))
 	{
 	    steamtools = true;
 	}
-	#endif
 }
 
 public OnLibraryRemoved(const String:name[])
 {
-	#if defined _steamtools_included
 	if (StrEqual(name, "SteamTools"))
 	{
 	    steamtools = false;
 	}
-	#endif
 }
