@@ -2,10 +2,7 @@
 #include <sdktools>
 #include <tf2>
 #include <tf2_stocks>
-
-#undef REQUIRE_EXTENSIONS
-#tryinclude <steamtools>
-#define REQUIRE_EXTENSIONS
+#include <steamtools>
 
 /*
  * Original code by Matheus28,
@@ -92,14 +89,6 @@ new Float:hiddenAwayTime;
 new bool:newHidden;
 new bool:playing;
 
-#if defined _steamtools_included
-new bool:steamtools = false;
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max) {
-    MarkNativeAsOptional("Steam_SetGameDescription");
-    return APLRes_Success;
-}
-#endif
-
 new forceNextHidden;
 
 new Handle:t_disableCps;
@@ -107,29 +96,15 @@ new Handle:t_tick;
 
 new bool:started;
 
-new bool:cvar_enabled;
-new Handle:cv_enabled
+new Handle:cv_enabled;
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
-    ResetConVar(CreateConVar("sm_hidden_version", PLUGIN_VERSION, "The Hidden Version",
-    FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY), true, true);
-    
-    //cv_enable = CreateConVar("sm_hidden_enable", "1.0", "Enables/Disables Hidden",
-    //FCVAR_PLUGIN, true, 0.0, true, 1.0);
-    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     
-    //HookConVarChange(cv_enable, CC_Enable);
-
-    #if defined _steamtools_included
-        steamtools = LibraryExists("SteamTools");
-    #endif
-
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     HookConVarChange(cv_enabled, cvhook_enabled);
-    cvar_enabled = GetConVarBool(cv_enabled);
     
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
     RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
@@ -202,10 +177,6 @@ public OnMapStart() {
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
-
-public CC_Enable(Handle:convar, const String:oldValue[], const String:newValue[]) {
-    CheckEnable();
-}
 
 public CheckEnable() {
     if (IsArenaMap() && GetConVarBool(cv_enabled)) {
@@ -550,10 +521,6 @@ public AddHiddenVisible(Float:value) {
     if (hiddenVisible<value) hiddenVisible=value;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
 stock ResetHidden() {
     if (hidden!=0 && IsClientInGame(hidden)) {
         RemoveHiddenPowers(hidden);
@@ -888,10 +855,6 @@ stock bool:HiddenBoo() {
 #endif
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
 public Action:Timer_Respawn(Handle:timer, any:data) {
     TF2_RespawnPlayer(data);
 }
@@ -903,9 +866,6 @@ public Action:Timer_DisableCps(Handle:timer) {
     DisableCps();
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 stock bool:CanPlay() {
     new r=0;
     new c=0;
@@ -919,14 +879,10 @@ stock bool:CanPlay() {
     return r>0 && c>1;
 }
 
-/*stock SetEntityFlags(ent, flags) {
-    SetEntProp(ent, Prop_Data, "m_fFlags", flags);
-}*/
-
-
 stock IsClientPlaying(i) {
     return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
 }
+
 stock GetClientsPlaying() {
     new c;
     for (new i=1;i<=MaxClients;++i) {
@@ -936,6 +892,7 @@ stock GetClientsPlaying() {
     }
     return c;
 }
+
 stock MakeTeamWin(team) {
     new ent = FindEntityByClassname(-1, "team_control_point_master");
     if (ent == -1) {
@@ -960,6 +917,7 @@ stock OverlayCommand(client, String:overlay[]) {
         ClientCommand(client, "r_screenoverlay %s", overlay);
     }
 }
+
 stock DisableCps() {
     new i = -1;
     new CP = 0;
@@ -1000,31 +958,22 @@ stock Dissolve(client, type) {
     }
 }
 
-////
-
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    cvar_enabled = GetConVarBool(cvar);
+    new bool:cvar_enabled = GetConVarBool(cvar);
     if (cvar_enabled) {
         CheckEnable();
         PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
-        #if defined _steamtools_included
-        if (steamtools) {
-            decl String:gameDesc[64];
-            Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
-            Steam_SetGameDescription(gameDesc);
-        }
-        #endif 
+        decl String:gameDesc[64];
+        Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
+        Steam_SetGameDescription(gameDesc);
     } else {
         PrintToChatAll("[%s] Disabled!", PLUGIN_NAME);
-        #if defined _steamtools_included
-        if (steamtools) {
-            Steam_SetGameDescription("Team Fortress");
-        }
-        #endif
+        Steam_SetGameDescription("Team Fortress");
     }
 }
 
 public Action:Command_EnableHidden(client, args) {
+    new bool:cvar_enabled = GetConVarBool(cv_enabled);
     if (cvar_enabled) return Plugin_Handled;
     ServerCommand("tf2_hidden_enabled 1");
     ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
@@ -1032,26 +981,9 @@ public Action:Command_EnableHidden(client, args) {
 }
 
 public Action:Command_DisableHidden(client, args) {
+    new bool:cvar_enabled = GetConVarBool(cv_enabled);
     if (!cvar_enabled) return Plugin_Handled;
     ServerCommand("tf2_hidden_enabled 0");
     ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
     return Plugin_Handled;
-}
-
-public OnLibraryAdded(const String:name[]) {
-    #if defined _steamtools_included
-    if (StrEqual(name, "SteamTools"))
-    {
-        steamtools = true;
-    }
-    #endif
-}
-
-public OnLibraryRemoved(const String:name[]) {
-    #if defined _steamtools_included
-    if (StrEqual(name, "SteamTools"))
-    {
-        steamtools = false;
-    }
-    #endif
 }
