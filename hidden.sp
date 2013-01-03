@@ -68,7 +68,7 @@ public Plugin:myinfo = {
 }
 
 
-enum HTeam{
+enum HTeam {
     HTeam_Unassigned = TFTeam_Unassigned,
     HTeam_Spectator = TFTeam_Spectator,
     HTeam_Hidden = TFTeam_Blue,
@@ -94,8 +94,7 @@ new bool:playing;
 
 #if defined _steamtools_included
 new bool:steamtools = false;
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
-{
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max) {
     MarkNativeAsOptional("Steam_SetGameDescription");
     return APLRes_Success;
 }
@@ -111,7 +110,7 @@ new bool:started;
 new bool:cvar_enabled;
 new Handle:cv_enabled
 
-public OnPluginStart(){
+public OnPluginStart() {
     LoadTranslations("common.phrases");
     
     ResetConVar(CreateConVar("sm_hidden_version", PLUGIN_VERSION, "The Hidden Version",
@@ -137,8 +136,8 @@ public OnPluginStart(){
  
 }
 
-public StartPlugin(){
-    if(started) return;
+public StartPlugin() {
+    if (started) return;
     started=true;
     
     t_tick = CreateTimer(TICK_INTERVAL, Timer_Tick, _, TIMER_REPEAT);
@@ -155,17 +154,17 @@ public StartPlugin(){
     HookEvent("player_death", player_death);
 }
 
-public OnPluginEnd(){
-    if(started){
-        for(new i=1;i<=MaxClients;++i){
-            if(!IsClientInGame(i)) continue;
+public OnPluginEnd() {
+    if (started) {
+        for (new i=1;i<=MaxClients;++i) {
+            if (!IsClientInGame(i)) continue;
             RemoveHiddenVision(i);
         }
     }
 }
 
-public StopPlugin(){
-    if(!started) return;
+public StopPlugin() {
+    if (!started) return;
     started=false;
     
     KillTimer(t_tick);
@@ -182,21 +181,21 @@ public StopPlugin(){
     UnhookEvent("player_death", player_death);
 }
 
-public Action:OnGetGameDescription(String:gameDesc[64]){
-    if(started){
+public Action:OnGetGameDescription(String:gameDesc[64]) {
+    if (started) {
         strcopy(gameDesc, 64, "The Hidden");
         return Plugin_Changed;
     }
     return Plugin_Continue;
 }
 
-public OnClientDisconnect(client){
-    if(client==hidden){
+public OnClientDisconnect(client) {
+    if (client==hidden) {
         ResetHidden();
     }
 }
 
-public OnMapStart(){
+public OnMapStart() {
     CheckEnable();
     playing=true;
     
@@ -204,24 +203,24 @@ public OnMapStart(){
 }
 
 
-public CC_Enable(Handle:convar, const String:oldValue[], const String:newValue[]){
+public CC_Enable(Handle:convar, const String:oldValue[], const String:newValue[]) {
     CheckEnable();
 }
 
-public CheckEnable(){
-    if(IsArenaMap() && GetConVarBool(cv_enabled)){
+public CheckEnable() {
+    if (IsArenaMap() && GetConVarBool(cv_enabled)) {
         StartPlugin();
-    }else{
+    } else {
         StopPlugin();
     }
 }
 
-public Action:Cmd_NextHidden(client, args){
-    if(!started) return Plugin_Continue;
-    if(args<1){
-        if(GetCmdReplySource()==SM_REPLY_TO_CHAT){
+public Action:Cmd_NextHidden(client, args) {
+    if (!started) return Plugin_Continue;
+    if (args<1) {
+        if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
-        }else{
+        } else {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: sm_nexthidden <player>", PLUGIN_NAME);
         }
         return Plugin_Handled;
@@ -232,7 +231,7 @@ public Action:Cmd_NextHidden(client, args){
     
     
     new target = FindTarget(client, tmp, false, false);
-    if(target==-1) return Plugin_Handled;
+    if (target==-1) return Plugin_Handled;
     
     forceNextHidden = GetClientUserId(target);
     
@@ -241,102 +240,98 @@ public Action:Cmd_NextHidden(client, args){
     return Plugin_Handled;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-
-public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast) {
     playing=true;
     CreateTimer(0.5, Timer_ResetHidden);
 }
 
-public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast) {
     playing=true;
 }
 
-public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast) {
     playing=false;
     CreateTimer(0.1, Timer_NewGame);
 }
 
-public Action:Timer_NewGame(Handle:timer){
+public Action:Timer_NewGame(Handle:timer) {
     NewGame();
 }
-public Action:Timer_ResetHidden(Handle:timer){
+public Action:Timer_ResetHidden(Handle:timer) {
     ResetHidden();
 }
 
 
-public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if(!client || !IsClientInGame(client) || IsFakeClient(client)) return;    
+    if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;    
     new HTeam:team = HTeam:GetEventInt(event, "team");
 
-    if(client != hidden && team==HTeam_Hidden){
+    if (client != hidden && team==HTeam_Hidden) {
         ChangeClientTeam(client, _:HTeam_Iris);
     }
 }
 
-public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     new TFClassType:class = TF2_GetPlayerClass(client);
     
-    if(client==hidden){
-        if(class!=TFClass_Spy){
+    if (client==hidden) {
+        if (class!=TFClass_Spy) {
             TF2_SetPlayerClass(client, TFClass_Spy, true, true);
             CreateTimer(0.1, Timer_Respawn, client);
         }
         newHidden=true;
-    }else{
-        if(class==TFClass_Spy || class==TFClass_Engineer){
+    } else {
+        if (class==TFClass_Spy || class==TFClass_Engineer) {
             TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
             CreateTimer(0.1, Timer_Respawn, client);
-            if(playing){
+            if (playing) {
                 PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             }
         }
     }
 }
 
-public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
     new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    if(victim!=hidden) return;
+    if (victim!=hidden) return;
     
     new damage = GetEventInt(event, "damageamount");
     
     hiddenHp-=damage;
-    if(hiddenHp<0) hiddenHp=0;
+    if (hiddenHp<0) hiddenHp=0;
     
-    if(hiddenHp>500){
+    if (hiddenHp>500) {
         SetEntityHealth(hidden, 500);
-    }else if(hiddenHp>0){
+    } else if (hiddenHp>0) {
         SetEntityHealth(hidden, hiddenHp);
     }
 }
 
-public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast){
+public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
     new victim = GetClientOfUserId(GetEventInt(event, "userid"));
     new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
     
-    if(!playing){
-        if(victim==hidden){
+    if (!playing) {
+        if (victim==hidden) {
             RemoveHiddenPowers(victim);
         }
         return;
     }
     
-    if(victim==hidden){
+    if (victim==hidden) {
         hiddenHp=0;
         RemoveHiddenPowers(victim);
         PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
-    }else{
-        if(hidden!=0 && attacker==hidden){
+    } else {
+        if (hidden!=0 && attacker==hidden) {
             hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
-            if(hiddenInvisibility>HIDDEN_INVISIBILITY_TIME){
+            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
                 hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
             }
             hiddenHp+=HIDDEN_HP_PER_KILL;
-            if(hiddenHp>hiddenHpMax){
+            if (hiddenHp>hiddenHpMax) {
                 hiddenHp=hiddenHpMax;
             }
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
@@ -344,38 +339,35 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
         }
     }
 }
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
 
-public OnGameFrame(){
-    if(!started) return;
-    if(!CanPlay()) return;
+public OnGameFrame() {
+    if (!started) return;
+    if (!CanPlay()) return;
     
     new Float:tickInterval = GetTickInterval();
     
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
         
-        if(i==hidden && IsPlayerAlive(i)){
-            if(GetClientHealth(i)>0){
-                if(hiddenHp>500){
+        if (i==hidden && IsPlayerAlive(i)) {
+            if (GetClientHealth(i)>0) {
+                if (hiddenHp>500) {
                     SetEntityHealth(i, 500);
-                }else{
+                } else {
                     SetEntityHealth(i, hiddenHp);
                 }
             }
             
             SetEntDataFloat(i, FindSendPropInfo("CTFPlayer", "m_flMaxspeed"), 400.0, true);
             
-            if(newHidden){
+            if (newHidden) {
                 newHidden=false;
                 CreateTimer(0.5, Timer_GiveHiddenPowers, GetClientUserId(hidden));
             }
             
-            if(hiddenAway){
+            if (hiddenAway) {
                 hiddenAwayTime+=tickInterval;
-                if(hiddenAwayTime>HIDDEN_AWAY_TIME){
+                if (hiddenAwayTime>HIDDEN_AWAY_TIME) {
                     ForcePlayerSuicide(i);
                     PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed because he was away", PLUGIN_NAME);
                     continue;
@@ -384,13 +376,13 @@ public OnGameFrame(){
             
             new eflags=GetEntityFlags(i);
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Disguised) || TF2_IsPlayerInCondition(i, TFCond_Disguising)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Disguised) || TF2_IsPlayerInCondition(i, TFCond_Disguising)) {
                 TF2_RemovePlayerDisguise(i);
             }
             
-            if(hiddenInvisibility>0.0){
+            if (hiddenInvisibility>0.0) {
                 hiddenInvisibility-=tickInterval;
-                if(hiddenInvisibility<0.0){
+                if (hiddenInvisibility<0.0) {
                     hiddenInvisibility=0.0;
                     ForcePlayerSuicide(i);
                     PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 lost his powers!", PLUGIN_NAME);
@@ -399,109 +391,109 @@ public OnGameFrame(){
             }
             
             #if defined HIDDEN_BOO
-                if(hiddenBoo>0.0){
+                if (hiddenBoo>0.0) {
                     hiddenBoo-=tickInterval;
-                    if(hiddenBoo<0.0){
+                    if (hiddenBoo<0.0) {
                         hiddenBoo=0.0;
                     }
                 }
             #endif
             
-            if(!hiddenStick){
+            if (!hiddenStick) {
                 HiddenUnstick();
-                if(hiddenStamina<HIDDEN_STAMINA_TIME){
+                if (hiddenStamina<HIDDEN_STAMINA_TIME) {
                     hiddenStamina += tickInterval/2;
-                    if(hiddenStamina>HIDDEN_STAMINA_TIME){
+                    if (hiddenStamina>HIDDEN_STAMINA_TIME) {
                         hiddenStamina=HIDDEN_STAMINA_TIME;
                     }
                 }
-            }else{
+            } else {
                 hiddenStamina-=tickInterval;
-                if(hiddenStamina<=0.0){
+                if (hiddenStamina<=0.0) {
                     hiddenStamina=0.0;
                     hiddenStick=false;
                     HiddenUnstick();
-                }else if(GetEntityMoveType(hidden)==MOVETYPE_WALK){
+                } else if (GetEntityMoveType(hidden)==MOVETYPE_WALK) {
                     SetEntityMoveType(hidden, MOVETYPE_NONE);
                 }
             }
             
-            if(eflags & FL_ONGROUND || hiddenStick){
-                if(hiddenJump>0.0){
+            if (eflags & FL_ONGROUND || hiddenStick) {
+                if (hiddenJump>0.0) {
                     hiddenJump-=tickInterval;
-                    if(hiddenJump<0.0){
+                    if (hiddenJump<0.0) {
                         hiddenJump=0.0;
                     }
                 }
             }
             
-            if(hiddenVisible>0.0){
+            if (hiddenVisible>0.0) {
                 hiddenVisible-=tickInterval;
-                if(hiddenVisible<0.0){
+                if (hiddenVisible<0.0) {
                     hiddenVisible=0.0;
                 }
             }
             
             
-            if(hiddenInvisibility>0.0){
-                if(hiddenVisible<=0.0){
-                    if(!TF2_IsPlayerInCondition(i, TFCond_Cloaked)){
+            if (hiddenInvisibility>0.0) {
+                if (hiddenVisible<=0.0) {
+                    if (!TF2_IsPlayerInCondition(i, TFCond_Cloaked)) {
                         TF2_AddCondition(i, TFCond_Cloaked, -1.0);
                     }
-                }else{
+                } else {
                     TF2_RemoveCondition(i, TFCond_Cloaked);
                 }
-            }else{
+            } else {
                 TF2_RemoveCondition(i, TFCond_Cloaked);
             }
             
             TF2_RemoveCondition(i, TFCond_DeadRingered);
             TF2_RemoveCondition(i, TFCond_Kritzkrieged);
             
-            if(TF2_IsPlayerInCondition(i, TFCond_OnFire)){
+            if (TF2_IsPlayerInCondition(i, TFCond_OnFire)) {
                 AddHiddenVisible(0.5);
                 TF2_RemoveCondition(i, TFCond_OnFire);
                 GiveHiddenVision(i);
             }
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Ubercharged)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Ubercharged)) {
                 TF2_RemoveCondition(i, TFCond_Ubercharged);
                 GiveHiddenVision(i);
             }
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Jarated)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Jarated)) {
                 AddHiddenVisible(1.0);
                 TF2_RemoveCondition(i, TFCond_Jarated);
                 GiveHiddenVision(i);
             }
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Milked)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Milked)) {
                 AddHiddenVisible(0.75);
                 TF2_RemoveCondition(i, TFCond_Milked);
             }
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Bonked)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Bonked)) {
                 AddHiddenVisible(1.0);
                 TF2_RemoveCondition(i, TFCond_Bonked);
             }
             
-            if(TF2_IsPlayerInCondition(i, TFCond_Bleeding)){
+            if (TF2_IsPlayerInCondition(i, TFCond_Bleeding)) {
                 AddHiddenVisible(0.5);
                 TF2_RemoveCondition(i, TFCond_Bleeding);
             }
             
             SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", hiddenInvisibility/HIDDEN_INVISIBILITY_TIME*100.0);
             
-            if(GetEntProp(i, Prop_Send, "m_bGlowEnabled")){
+            if (GetEntProp(i, Prop_Send, "m_bGlowEnabled")) {
                 SetEntProp(i, Prop_Send, "m_bGlowEnabled", 0);
             }
             
-        }else if(IsClientPlaying(i)){
-            if(HTeam:GetClientTeam(i) == HTeam_Hidden){
+        } else if (IsClientPlaying(i)) {
+            if (HTeam:GetClientTeam(i) == HTeam_Hidden) {
                 ChangeClientTeam(i, _:HTeam_Iris);
             }
             
-            if(IsPlayerAlive(i) && !GetEntProp(i, Prop_Send, "m_bGlowEnabled")){
+            if (IsPlayerAlive(i) && !GetEntProp(i, Prop_Send, "m_bGlowEnabled")) {
                 SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
             }
         }
@@ -510,105 +502,105 @@ public OnGameFrame(){
 }
 
 
-public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon){
-    if(!CanPlay()) return Plugin_Continue;
-    if(client==hidden){
+public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
+    if (!CanPlay()) return Plugin_Continue;
+    if (client==hidden) {
         new bool:changed=false;
         
-        if(hiddenStick && hiddenStamina<HIDDEN_STAMINA_TIME-0.5){
-            if(buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP > 0)
+        if (hiddenStick && hiddenStamina<HIDDEN_STAMINA_TIME-0.5) {
+            if (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP > 0)
             {
                 HiddenUnstick();
             }
         }
         
-        if(hiddenAway && (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)
+        if (hiddenAway && (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)
         {
             hiddenAway=false;
         }
         
-        if(buttons&IN_ATTACK){
+        if (buttons&IN_ATTACK) {
             changed=true;
             
             TF2_RemoveCondition(client, TFCond_Cloaked);
             AddHiddenVisible(0.75);
         }
         
-        if(buttons&IN_ATTACK2){
+        if (buttons&IN_ATTACK2) {
             buttons&=~IN_ATTACK2;
             changed=true;
             
             HiddenSpecial();
         }
         
-        if(buttons&IN_RELOAD){
+        if (buttons&IN_RELOAD) {
             #if defined HIDDEN_BOO
                 HiddenBoo();
             #endif
         }
         
-        if(changed){
+        if (changed) {
             return Plugin_Changed
         }
     }
     return Plugin_Continue;
 }
 
-public AddHiddenVisible(Float:value){
-    if(hiddenVisible<value) hiddenVisible=value;
+public AddHiddenVisible(Float:value) {
+    if (hiddenVisible<value) hiddenVisible=value;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-stock ResetHidden(){
-    if(hidden!=0 && IsClientInGame(hidden)){
+stock ResetHidden() {
+    if (hidden!=0 && IsClientInGame(hidden)) {
         RemoveHiddenPowers(hidden);
         lastHiddenUserid=GetClientUserId(hidden);
-    }else{
+    } else {
         lastHiddenUserid=0;
     }
     hidden=0;
 }
 
-stock NewGame(){
-    if(!CanPlay()) return;
-    if(hidden!=0){
+stock NewGame() {
+    if (!CanPlay()) return;
+    if (hidden!=0) {
         return;
     }
     playing=false;
     SelectHidden();
-    if(hidden==0) return;
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
-        if(!IsClientPlaying(i)) continue;
-        if(i==hidden){
+    if (hidden==0) return;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsClientPlaying(i)) continue;
+        if (i==hidden) {
             new bool:respawn=false;
-            if(HTeam:GetClientTeam(i) != HTeam_Hidden){
+            if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
                 ChangeClientTeam(i, _:HTeam_Hidden);
                 respawn=true;
             }
-            if(TF2_GetPlayerClass(i)!=TFClass_Spy){
+            if (TF2_GetPlayerClass(i)!=TFClass_Spy) {
                 TF2_SetPlayerClass(i, TFClass_Spy, true, true);
                 respawn=true;
             }
-            if(respawn){
+            if (respawn) {
                 CreateTimer(0.1, Timer_Respawn, i);
             }
-        }else{
+        } else {
             new bool:respawn=false;
-            if(HTeam:GetClientTeam(i) != HTeam_Iris){
+            if (HTeam:GetClientTeam(i) != HTeam_Iris) {
                 ChangeClientTeam(i, _:HTeam_Iris);
                 respawn=true;
             }
             new TFClassType:class=TF2_GetPlayerClass(i);
             
-            if(class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer){
+            if (class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
-            if(respawn){
+            if (respawn) {
                 CreateTimer(0.1, Timer_Respawn, i);
             }
             PrintToChat(i, "\x04[%s]\x01 \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_NAME, hidden);
@@ -617,7 +609,7 @@ stock NewGame(){
     newHidden=true;
 }
 
-stock SelectHidden(){
+stock SelectHidden() {
     hidden=0;
     hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
     hiddenHp=hiddenHpMax;
@@ -635,41 +627,41 @@ stock SelectHidden(){
     
     new tmp=GetClientOfUserId(forceNextHidden);
     
-    if(tmp){
+    if (tmp) {
         hidden=tmp;
         forceNextHidden=0;
-    }else{
+    } else {
         new clientsCount;
         new clients[MAXPLAYERS+1];
-        for(new i=1;i<=MaxClients;++i){
-            if(!IsClientInGame(i)) continue;
-            if(!IsClientPlaying(i)) continue;
-            if(IsFakeClient(i)) continue;
-            if(IsClientInKickQueue(i)) continue;
-            if(IsClientTimingOut(i)) continue;
-            if(GetClientUserId(i)==lastHiddenUserid) continue;
+        for (new i=1;i<=MaxClients;++i) {
+            if (!IsClientInGame(i)) continue;
+            if (!IsClientPlaying(i)) continue;
+            if (IsFakeClient(i)) continue;
+            if (IsClientInKickQueue(i)) continue;
+            if (IsClientTimingOut(i)) continue;
+            if (GetClientUserId(i)==lastHiddenUserid) continue;
             clients[clientsCount++]=i;
         }
         
         //If there isn't any players, try to add the last hidden
-        if(clientsCount==0){
+        if (clientsCount==0) {
             tmp=GetClientOfUserId(lastHiddenUserid);
-            if(tmp!=0){
+            if (tmp!=0) {
                 clients[clientsCount++]=tmp;
             }
         }
         
         //If there isn't any players, try to add bots
-        if(clientsCount==0){
-            for(new i=1;i<=MaxClients;++i){
-                if(!IsClientInGame(i)) continue;
-                if(!IsClientPlaying(i)) continue;
-                if(IsFakeClient(i)) continue;
+        if (clientsCount==0) {
+            for (new i=1;i<=MaxClients;++i) {
+                if (!IsClientInGame(i)) continue;
+                if (!IsClientPlaying(i)) continue;
+                if (IsFakeClient(i)) continue;
                 clients[clientsCount++]=i;
             }
         }
         
-        if(clientsCount==0){
+        if (clientsCount==0) {
             return hidden;
         }
         
@@ -679,7 +671,7 @@ stock SelectHidden(){
     ChangeClientTeam(hidden, _:HTeam_Hidden);
     TF2_SetPlayerClass(hidden, TFClass_Spy, true, true);
     
-    if(!IsPlayerAlive(hidden)){
+    if (!IsPlayerAlive(hidden)) {
         TF2_RespawnPlayer(hidden);
     }
     
@@ -689,12 +681,12 @@ stock SelectHidden(){
     return hidden;
 }
 
-public Action:Timer_GiveHiddenPowers(Handle:timer, any:data){
+public Action:Timer_GiveHiddenPowers(Handle:timer, any:data) {
     GiveHiddenPowers(GetClientOfUserId(data));
 }
 
-stock GiveHiddenPowers(i){
-    if(!i) return;
+stock GiveHiddenPowers(i) {
+    if (!i) return;
     
     TF2_RemoveWeaponSlot(i, 0); // Revolver
     //TF2_RemoveWeaponSlot(i, 1); // Sapper
@@ -719,7 +711,7 @@ stock GiveHiddenPowers(i){
     SetEntProp(i, Prop_Send, "m_iHideHUD", HIDEHUD_HEALTH);
 }
 
-stock RemoveHiddenPowers(i){
+stock RemoveHiddenPowers(i) {
     
     RemoveHiddenVision(i);
     
@@ -727,33 +719,33 @@ stock RemoveHiddenPowers(i){
 }
 
 
-stock GiveHiddenVision(i){
+stock GiveHiddenVision(i) {
     OverlayCommand(i, HIDDEN_OVERLAY);
 }
 
-stock RemoveHiddenVision(i){
+stock RemoveHiddenVision(i) {
     OverlayCommand(i, "\"\"");
 }
 
-stock ShowHiddenHP(Float:duration){
-    if(hidden==0) return;
+stock ShowHiddenHP(Float:duration) {
+    if (hidden==0) return;
     duration+=0.1;
     
     new Float:perc=float(hiddenHp)/float(hiddenHpMax)*100.0;
     SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255)
     
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
-        if(IsFakeClient(i)) continue;
-        if(i==hidden) continue;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (IsFakeClient(i)) continue;
+        if (i==hidden) continue;
         ShowHudText(i, 0, "The Hidden: %.1f%%", perc);
     }
     
-    if(perc>60.0){
+    if (perc>60.0) {
         SetHudTextParams(-1.0, 0.3, duration, 0, 255, 0, 255);
-    }else if(perc>30.0){
+    } else if (perc>30.0) {
         SetHudTextParams(-1.0, 0.3, duration, 128, 128, 0, 255);
-    }else{
+    } else {
         SetHudTextParams(-1.0, 0.3, duration, 255, 0, 0, 255);
     }
     
@@ -768,16 +760,16 @@ stock ShowHiddenHP(Float:duration){
     #endif
 }
 
-stock bool:HiddenSpecial(){
-    if(hidden==0) return;
+stock bool:HiddenSpecial() {
+    if (hidden==0) return;
     
-    if(HiddenStick()==-1){
+    if (HiddenStick()==-1) {
         HiddenSuperJump();
     }
 }
 
-stock HiddenStick(){
-    if(hidden==0) return 0;
+stock HiddenStick() {
+    if (hidden==0) return 0;
     
     decl Float:pos[3];
     decl Float:ang[3];
@@ -787,34 +779,34 @@ stock HiddenStick(){
     
     
     new Handle:ray = TR_TraceRayFilterEx(pos, ang, MASK_ALL, RayType_Infinite, TraceRay_HitWorld);
-    if(TR_DidHit(ray)){
+    if (TR_DidHit(ray)) {
         decl Float:pos2[3];
         TR_GetEndPosition(pos2, ray);
-        if(GetVectorDistance(pos, pos2)<64.0){
-            if(hiddenStick || hiddenStamina<HIDDEN_STAMINA_TIME*0.7){
+        if (GetVectorDistance(pos, pos2)<64.0) {
+            if (hiddenStick || hiddenStamina<HIDDEN_STAMINA_TIME*0.7) {
                 CloseHandle(ray);
                 return 0;
             }
             
             hiddenStick=true;
-            if(GetEntityMoveType(hidden)!=MOVETYPE_NONE){
+            if (GetEntityMoveType(hidden)!=MOVETYPE_NONE) {
                 SetEntityMoveType(hidden, MOVETYPE_NONE);
             }
             CloseHandle(ray);
             return 1;
-        }else{
+        } else {
             CloseHandle(ray);
             return -1;
         }
-    }else{
+    } else {
         CloseHandle(ray);
         return -1;
     }
 }
 
-public HiddenUnstick(){
+public HiddenUnstick() {
     hiddenStick=false;
-    if(GetEntityMoveType(hidden)==MOVETYPE_NONE){
+    if (GetEntityMoveType(hidden)==MOVETYPE_NONE) {
         SetEntityMoveType(hidden, MOVETYPE_WALK);
         new Float:vel[3];
         TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
@@ -825,9 +817,9 @@ public bool:TraceRay_HitWorld(entityhit, mask) {
     return entityhit==0;
 }
 
-stock bool:HiddenSuperJump(){
-    if(hidden==0) return false;
-    if(hiddenJump>0.0) return false;
+stock bool:HiddenSuperJump() {
+    if (hidden==0) return false;
+    if (hiddenJump>0.0) return false;
     hiddenJump = HIDDEN_JUMP_TIME;
     
     HiddenUnstick();
@@ -847,7 +839,7 @@ stock bool:HiddenSuperJump(){
     vel[2] += tmp[2]*900.0;
     
     new flags=GetEntityFlags(hidden);
-    if(flags & FL_ONGROUND){
+    if (flags & FL_ONGROUND) {
         flags &= ~FL_ONGROUND;
     }
     SetEntityFlags(hidden, flags);
@@ -860,9 +852,9 @@ stock bool:HiddenSuperJump(){
 }
 
 #if defined HIDDEN_BOO
-stock bool:HiddenBoo(){
-    if(hidden==0) return false;
-    if(hiddenBoo>0.0) return false;
+stock bool:HiddenBoo() {
+    if (hidden==0) return false;
+    if (hiddenBoo>0.0) return false;
     hiddenBoo = HIDDEN_BOO_TIME;
     
     decl Float:pos[3];
@@ -875,12 +867,12 @@ stock bool:HiddenBoo(){
     
     new targets[MaxClients];
     new targetsCount;
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
-        if(!IsPlayerAlive(i)) continue;
-        if(i==hidden) continue;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsPlayerAlive(i)) continue;
+        if (i==hidden) continue;
         GetClientAbsOrigin(i, pos2);
-        if(GetVectorDistance(pos, pos2, true)>196.0*196.0){
+        if (GetVectorDistance(pos, pos2, true)>196.0*196.0) {
             continue
         }
         
@@ -900,53 +892,53 @@ stock bool:HiddenBoo(){
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-public Action:Timer_Respawn(Handle:timer, any:data){
+public Action:Timer_Respawn(Handle:timer, any:data) {
     TF2_RespawnPlayer(data);
 }
-public Action:Timer_Tick(Handle:timer){
+public Action:Timer_Tick(Handle:timer) {
     ShowHiddenHP(TICK_INTERVAL);
 }
 
-public Action:Timer_DisableCps(Handle:timer){
+public Action:Timer_DisableCps(Handle:timer) {
     DisableCps();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-stock bool:CanPlay(){
+stock bool:CanPlay() {
     new r=0;
     new c=0;
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
-        if(!IsClientPlaying(i)) continue;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsClientPlaying(i)) continue;
         ++c;
-        if(IsFakeClient(i)) continue;
+        if (IsFakeClient(i)) continue;
         ++r;
     }
     return r>0 && c>1;
 }
 
-/*stock SetEntityFlags(ent, flags){
+/*stock SetEntityFlags(ent, flags) {
     SetEntProp(ent, Prop_Data, "m_fFlags", flags);
 }*/
 
 
-stock IsClientPlaying(i){
+stock IsClientPlaying(i) {
     return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
 }
-stock GetClientsPlaying(){
+stock GetClientsPlaying() {
     new c;
-    for(new i=1;i<=MaxClients;++i){
-        if(!IsClientInGame(i)) continue;
-        if(!IsClientPlaying(i)) continue;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsClientPlaying(i)) continue;
         ++c;
     }
     return c;
 }
-stock MakeTeamWin(team){
+stock MakeTeamWin(team) {
     new ent = FindEntityByClassname(-1, "team_control_point_master");
-    if (ent == -1){
+    if (ent == -1) {
         ent = CreateEntityByName("team_control_point_master");
         DispatchSpawn(ent);
         AcceptEntityInput(ent, "Enable");
@@ -956,49 +948,49 @@ stock MakeTeamWin(team){
     AcceptEntityInput(ent, "SetWinner");
 }
 
-stock bool:IsArenaMap(){
+stock bool:IsArenaMap() {
     decl String:curMap[32];
     GetCurrentMap(curMap, sizeof(curMap));
     return strncmp("arena_", curMap, 6, false)==0;
 }
 
-stock OverlayCommand(client, String:overlay[]){    
-    if(client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
+stock OverlayCommand(client, String:overlay[]) {    
+    if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
         SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
         ClientCommand(client, "r_screenoverlay %s", overlay);
     }
 }
-stock DisableCps(){
+stock DisableCps() {
     new i = -1;
     new CP = 0;
     
-    for (new n = 0; n <= 16; n++){
+    for (new n = 0; n <= 16; n++) {
         CP = FindEntityByClassname(i, "trigger_capture_area");
-        if(IsValidEntity(CP)){
+        if (IsValidEntity(CP)) {
             AcceptEntityInput(CP, "Disable");
             i = CP;
-        }else{
+        } else {
             break;
         }
     }
 }
 
-public Action:Timer_Dissolve(Handle:timer, any:data){
+public Action:Timer_Dissolve(Handle:timer, any:data) {
     Dissolve(data, 3);
 }
 
-stock Dissolve(client, type){
-    if(!IsClientInGame(client)) return;
+stock Dissolve(client, type) {
+    if (!IsClientInGame(client)) return;
 
     new ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
-    if(ragdoll<0) return;
+    if (ragdoll<0) return;
 
     decl String:dname[32], String:dtype[32];
     Format(dname, sizeof(dname), "dis_%d", client);
     Format(dtype, sizeof(dtype), "%d", type);
     
     new ent = CreateEntityByName("env_entity_dissolver");
-    if(ent>0){
+    if (ent>0) {
         DispatchKeyValue(ragdoll, "targetname", dname);
         DispatchKeyValue(ent, "dissolvetype", dtype);
         DispatchKeyValue(ent, "target", dname);
@@ -1010,8 +1002,7 @@ stock Dissolve(client, type){
 
 ////
 
-public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
-{
+public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
     cvar_enabled = GetConVarBool(cvar);
     if (cvar_enabled) {
         CheckEnable();
@@ -1033,24 +1024,21 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
     }
 }
 
-public Action:Command_EnableHidden(client, args)
-{
+public Action:Command_EnableHidden(client, args) {
     if (cvar_enabled) return Plugin_Handled;
     ServerCommand("tf2_hidden_enabled 1");
     ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
     return Plugin_Handled;
 }
 
-public Action:Command_DisableHidden(client, args)
-{
+public Action:Command_DisableHidden(client, args) {
     if (!cvar_enabled) return Plugin_Handled;
     ServerCommand("tf2_hidden_enabled 0");
     ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
     return Plugin_Handled;
 }
 
-public OnLibraryAdded(const String:name[])
-{
+public OnLibraryAdded(const String:name[]) {
     #if defined _steamtools_included
     if (StrEqual(name, "SteamTools"))
     {
@@ -1059,8 +1047,7 @@ public OnLibraryAdded(const String:name[])
     #endif
 }
 
-public OnLibraryRemoved(const String:name[])
-{
+public OnLibraryRemoved(const String:name[]) {
     #if defined _steamtools_included
     if (StrEqual(name, "SteamTools"))
     {
