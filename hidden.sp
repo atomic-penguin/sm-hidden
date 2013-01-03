@@ -7,10 +7,6 @@
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 
-#undef REQUIRE_EXTENSIONS
-#include <sdkhooks>
-#define REQUIRE_EXTENSIONS
-
 /*
  * Original code by Matheus28,
  * http://forums.alliedmods.net/showthread.php?t=143577
