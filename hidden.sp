@@ -156,13 +156,13 @@ public StopPlugin() {
     UnhookEvent("player_death", player_death);
 }
 
-public Action:OnGetGameDescription(String:gameDesc[64]) {
+/*public Action:OnGetGameDescription(String:gameDesc[64]) {
     if (started) {
         strcopy(gameDesc, 64, "The Hidden");
         return Plugin_Changed;
     }
     return Plugin_Continue;
-}
+}*/
 
 public OnClientDisconnect(client) {
     if (client==hidden) {
@@ -705,7 +705,7 @@ stock ShowHiddenHP(Float:duration) {
         if (!IsClientInGame(i)) continue;
         if (IsFakeClient(i)) continue;
         if (i==hidden) continue;
-        ShowHudText(i, 0, "The Hidden: %.1f%%", perc);
+        ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
     }
     
     if (perc>60.0) {
@@ -961,7 +961,7 @@ stock Dissolve(client, type) {
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
     new bool:cvar_enabled = GetConVarBool(cvar);
     if (cvar_enabled) {
-        CheckEnable();
+        CheckEnable(); //calls either start or stop
         PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
         decl String:gameDesc[64];
         Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
@@ -969,6 +969,7 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
     } else {
         PrintToChatAll("[%s] Disabled!", PLUGIN_NAME);
         Steam_SetGameDescription("Team Fortress");
+        StopPlugin();
     }
 }
 
