@@ -94,9 +94,8 @@ new forceNextHidden;
 new Handle:t_disableCps;
 new Handle:t_tick;
 
-new bool:started;
-
-new Handle:cv_enabled;
+new bool:started; // whether plugin is active/started
+new Handle:cv_enabled; // Internal for tf2_hidden_enabled
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
@@ -127,6 +126,11 @@ public StartPlugin() {
     HookEvent("player_spawn", player_spawn);
     HookEvent("player_hurt", player_hurt);
     HookEvent("player_death", player_death);
+
+    PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
+    decl String:gameDesc[64];
+    Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
+    Steam_SetGameDescription(gameDesc);
 }
 
 public OnPluginEnd() {
@@ -163,19 +167,9 @@ public OnClientDisconnect(client) {
 }
 
 public OnMapStart() {
-    CheckEnable();
     playing=true;
     
     PrecacheSound(HIDDEN_BOO_FILE, true);
-}
-
-
-public CheckEnable() {
-    if (IsArenaMap() && GetConVarBool(cv_enabled)) {
-        StartPlugin();
-    } else {
-        StopPlugin();
-    }
 }
 
 public Action:Cmd_NextHidden(client, args) {
@@ -951,16 +945,9 @@ stock Dissolve(client, type) {
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    new bool:cvar_enabled = GetConVarBool(cvar);
-    if (cvar_enabled) {
-        CheckEnable(); //calls either start or stop
-        PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
-        decl String:gameDesc[64];
-        Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
-        Steam_SetGameDescription(gameDesc);
+    if (IsArenaMap() && GetConVarBool(cvar)) {
+        StartPlugin();
     } else {
-        PrintToChatAll("[%s] Disabled!", PLUGIN_NAME);
-        Steam_SetGameDescription("Team Fortress");
         StopPlugin();
     }
 }
