@@ -716,7 +716,7 @@ stock ShowHiddenHP(Float:duration) {
         SetHudTextParams(-1.0, 0.3, duration, 255, 0, 0, 255);
     }
     
-    ShowHudText(hidden, 0, "The Hidden: %.1f%%", perc);
+    ShowHudText(hidden, 0, "Hidden Health: %.1f%%", perc);
     
     SetHudTextParams(-1.0, 0.325, duration, 255, 255, 255, 255);
     ShowHudText(hidden, 1, "Stamina: %.0f%%", hiddenStamina/HIDDEN_STAMINA_TIME*100.0);
