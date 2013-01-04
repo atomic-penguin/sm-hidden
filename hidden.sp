@@ -451,6 +451,7 @@ public OnGameFrame() {
             if (TF2_IsPlayerInCondition(i, TFCond_Bleeding)) {
                 AddHiddenVisible(0.5);
                 TF2_RemoveCondition(i, TFCond_Bleeding);
+                GiveHiddenVision(i);
             }
             
             SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", hiddenInvisibility/HIDDEN_INVISIBILITY_TIME*100.0);
