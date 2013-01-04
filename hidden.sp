@@ -156,13 +156,13 @@ public StopPlugin() {
     UnhookEvent("player_death", player_death);
 }
 
-public Action:OnGetGameDescription(String:gameDesc[64]) {
+/*public Action:OnGetGameDescription(String:gameDesc[64]) {
     if (started) {
         strcopy(gameDesc, 64, "The Hidden");
         return Plugin_Changed;
     }
     return Plugin_Continue;
-}
+}*/
 
 public OnClientDisconnect(client) {
     if (client==hidden) {
