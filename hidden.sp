@@ -705,7 +705,7 @@ stock ShowHiddenHP(Float:duration) {
         if (!IsClientInGame(i)) continue;
         if (IsFakeClient(i)) continue;
         if (i==hidden) continue;
-        ShowHudText(i, 0, "The Hidden: %.1f%%", perc);
+        ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
     }
     
     if (perc>60.0) {
