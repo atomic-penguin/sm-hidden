@@ -333,9 +333,12 @@ public OnGameFrame() {
             
             new eflags=GetEntityFlags(i);
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Disguised) || TF2_IsPlayerInCondition(i, TFCond_Disguising)) {
-                TF2_RemovePlayerDisguise(i);
-            }
+            // Save checking for these conditions, always do them.
+            TF2_RemovePlayerDisguise(i);
+            TF2_RemoveCondition(i, TFCond_DeadRingered);
+            TF2_RemoveCondition(i, TFCond_Kritzkrieged);
+            TF2_RemoveCondition(i, TFCond_MarkedForDeath);
+
             
             if (hiddenInvisibility>0.0) {
                 hiddenInvisibility-=tickInterval;
@@ -391,7 +394,6 @@ public OnGameFrame() {
                 }
             }
             
-            
             if (hiddenInvisibility>0.0) {
                 if (hiddenVisible<=0.0) {
                     if (!TF2_IsPlayerInCondition(i, TFCond_Cloaked)) {
@@ -403,10 +405,7 @@ public OnGameFrame() {
             } else {
                 TF2_RemoveCondition(i, TFCond_Cloaked);
             }
-            
-            TF2_RemoveCondition(i, TFCond_DeadRingered);
-            TF2_RemoveCondition(i, TFCond_Kritzkrieged);
-            
+                        
             if (TF2_IsPlayerInCondition(i, TFCond_OnFire)) {
                 AddHiddenVisible(0.5);
                 TF2_RemoveCondition(i, TFCond_OnFire);
