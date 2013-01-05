@@ -15,46 +15,38 @@
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
 
+#define ROUND_TIME 60
+#define ROUND_TIME_PER_PLAYER 15
 #define TICK_INTERVAL 0.1
-
-#define HIDDEN_OVERLAY "effects/combine_binocoverlay"
-#define HIDDEN_COLOR {0, 0, 0, 3}
 
 #define HIDDEN_HP 500
 #define HIDDEN_HP_PER_PLAYER 50
 #define HIDDEN_HP_PER_KILL 75
-
-
 #define HIDDEN_INVISIBILITY_TIME 100.0
 #define HIDDEN_STAMINA_TIME 7.5
-
+#define HIDDEN_JUMP_TIME 0.5
+#define HIDDEN_AWAY_TIME 15.0
 #define HIDDEN_BOO
 #define HIDDEN_BOO_TIME 20.0
 #define HIDDEN_BOO_DURATION 3.5
 #define HIDDEN_BOO_VISIBLE 1.5
-#define HIDDEN_JUMP_TIME 0.5
-#define HIDDEN_AWAY_TIME 15.0
-
 #define HIDDEN_BOO_FILE "vo/taunts/spy_taunts06.wav"
+#define HIDDEN_OVERLAY "effects/combine_binocoverlay"
+#define HIDDEN_COLOR {0, 0, 0, 3}
 
-#define ROUND_TIME 60
-#define ROUND_TIME_PER_PLAYER 15
-
-#define HIDEHUD_WEAPONSELECTION ( 1<<0 ) // Hide ammo count & weapon selection
-#define HIDEHUD_FLASHLIGHT ( 1<<1 )
-#define HIDEHUD_ALL ( 1<<2 )
-#define HIDEHUD_HEALTH ( 1<<3 ) // Hide health & armor / suit battery
-#define HIDEHUD_PLAYERDEAD ( 1<<4 ) // Hide when local player's dead
-#define HIDEHUD_NEEDSUIT ( 1<<5 ) // Hide when the local player doesn't have the HEV suit
-#define HIDEHUD_MISCSTATUS ( 1<<6 ) // Hide miscellaneous status elements (trains, pickup history, death notices, etc)
-#define HIDEHUD_CHAT ( 1<<7 ) // Hide all communication elements (saytext, voice icon, etc)
-#define HIDEHUD_CROSSHAIR ( 1<<8 ) // Hide crosshairs
-#define HIDEHUD_VEHICLE_CROSSHAIR ( 1<<9 ) // Hide vehicle crosshair
-#define HIDEHUD_INVEHICLE ( 1<<10 )
-#define HIDEHUD_BONUS_PROGRESS ( 1<<11 ) // Hide bonus progress display (for bonus map challenges)
-
+#define HIDEHUD_WEAPONSELECTION   (1<<0)  // Hide ammo count & weapon selection
+#define HIDEHUD_FLASHLIGHT        (1<<1)  //
+#define HIDEHUD_ALL               (1<<2)  //
+#define HIDEHUD_HEALTH            (1<<3)  // Hide health & armor / suit battery
+#define HIDEHUD_PLAYERDEAD        (1<<4)  // Hide when local player's dead
+#define HIDEHUD_NEEDSUIT          (1<<5)  // Hide when the local player doesn't have the HEV suit
+#define HIDEHUD_MISCSTATUS        (1<<6)  // Hide miscellaneous status elements (trains, pickup history, death notices, etc)
+#define HIDEHUD_CHAT              (1<<7)  // Hide all communication elements (saytext, voice icon, etc)
+#define HIDEHUD_CROSSHAIR         (1<<8)  // Hide crosshairs
+#define HIDEHUD_VEHICLE_CROSSHAIR (1<<9)  // Hide vehicle crosshair
+#define HIDEHUD_INVEHICLE         (1<<10) //
+#define HIDEHUD_BONUS_PROGRESS    (1<<11) // Hide bonus progress display (for bonus map challenges)
 #define HIDEHUD_BITCOUNT 12
-
 
 public Plugin:myinfo = {
     name = PLUGIN_NAME,
@@ -63,7 +55,6 @@ public Plugin:myinfo = {
     version = PLUGIN_VERSION,
     url = PLUGIN_URL
 }
-
 
 enum HTeam {
     HTeam_Unassigned = TFTeam_Unassigned,
@@ -88,26 +79,21 @@ new Float:hiddenAwayTime;
 #endif
 new bool:newHidden;
 new bool:playing;
-
+new bool:started; // whether plugin is active/started
 new forceNextHidden;
-
 new Handle:t_disableCps;
 new Handle:t_tick;
-
-new bool:started; // whether plugin is active/started
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
-    RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
-    
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     HookConVarChange(cv_enabled, cvhook_enabled);
-    
+   
+    RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
     RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
- 
 }
 
 public StartPlugin() {
@@ -160,140 +146,11 @@ public StopPlugin() {
     UnhookEvent("player_death", player_death);
 }
 
-public OnClientDisconnect(client) {
-    if (client==hidden) {
-        ResetHidden();
-    }
-}
-
-public OnMapStart() {
-    playing=true;
-    
-    PrecacheSound(HIDDEN_BOO_FILE, true);
-}
-
-public Action:Cmd_NextHidden(client, args) {
-    if (!started) return Plugin_Continue;
-    if (args<1) {
-        if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
-            ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
-        } else {
-            ReplyToCommand(client, "\x04[%s]\x01 Usage: sm_nexthidden <player>", PLUGIN_NAME);
-        }
-        return Plugin_Handled;
-    }
-    
-    decl String:tmp[128];
-    GetCmdArg(1, tmp, sizeof(tmp));
-    
-    
-    new target = FindTarget(client, tmp, false, false);
-    if (target==-1) return Plugin_Handled;
-    
-    forceNextHidden = GetClientUserId(target);
-    
-    PrintToChat(client, "\x04[%s]\x01 The next hidden will be \x03%N\x01", PLUGIN_NAME, target);
-    
-    return Plugin_Handled;
-}
-
-public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=true;
-    CreateTimer(0.5, Timer_ResetHidden);
-}
-
-public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=true;
-}
-
-public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=false;
-    CreateTimer(0.1, Timer_NewGame);
-}
-
-public Action:Timer_NewGame(Handle:timer) {
-    NewGame();
-}
-public Action:Timer_ResetHidden(Handle:timer) {
-    ResetHidden();
-}
-
-
-public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;    
-    new HTeam:team = HTeam:GetEventInt(event, "team");
-
-    if (client != hidden && team==HTeam_Hidden) {
-        ChangeClientTeam(client, _:HTeam_Iris);
-    }
-}
-
-public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    new TFClassType:class = TF2_GetPlayerClass(client);
-    
-    if (client==hidden) {
-        if (class!=TFClass_Spy) {
-            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-        }
-        newHidden=true;
+public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
+    if (IsArenaMap() && GetConVarBool(cvar)) {
+        StartPlugin();
     } else {
-        if (class==TFClass_Spy || class==TFClass_Engineer) {
-            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-            if (playing) {
-                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            }
-        }
-    }
-}
-
-public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (victim!=hidden) return;
-    
-    new damage = GetEventInt(event, "damageamount");
-    
-    hiddenHp-=damage;
-    if (hiddenHp<0) hiddenHp=0;
-    
-    if (hiddenHp>500) {
-        SetEntityHealth(hidden, 500);
-    } else if (hiddenHp>0) {
-        SetEntityHealth(hidden, hiddenHp);
-    }
-}
-
-public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-    
-    if (!playing) {
-        if (victim==hidden) {
-            RemoveHiddenPowers(victim);
-        }
-        return;
-    }
-    
-    if (victim==hidden) {
-        hiddenHp=0;
-        RemoveHiddenPowers(victim);
-        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
-    } else {
-        if (hidden!=0 && attacker==hidden) {
-            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
-            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
-            }
-            hiddenHp+=HIDDEN_HP_PER_KILL;
-            if (hiddenHp>hiddenHpMax) {
-                hiddenHp=hiddenHpMax;
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim);
-        }
+        StopPlugin();
     }
 }
 
@@ -455,9 +312,108 @@ public OnGameFrame() {
             }
         }
     }
-    
 }
 
+public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast) {
+    playing=true;
+    CreateTimer(0.5, Timer_ResetHidden);
+}
+
+public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast) {
+    playing=true;
+}
+
+public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast) {
+    playing=false;
+    CreateTimer(0.1, Timer_NewGame);
+}
+
+public Action:Timer_DisableCps(Handle:timer) {
+    DisableCps();
+}
+
+public Action:Timer_NewGame(Handle:timer) {
+    NewGame();
+}
+
+public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;
+
+    new HTeam:team = HTeam:GetEventInt(event, "team");
+
+    if (client != hidden && team==HTeam_Hidden) {
+        ChangeClientTeam(client, _:HTeam_Iris);
+    }
+}
+
+public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    new TFClassType:class = TF2_GetPlayerClass(client);
+    
+    if (client==hidden) {
+        if (class!=TFClass_Spy) {
+            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+        }
+        newHidden=true;
+    } else {
+        if (class==TFClass_Spy || class==TFClass_Engineer) {
+            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+            if (playing) {
+                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+            }
+        }
+    }
+}
+
+public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    if (victim!=hidden) return;
+    
+    new damage = GetEventInt(event, "damageamount");
+    hiddenHp-=damage;
+
+    if (hiddenHp<0) hiddenHp=0;
+    
+    if (hiddenHp>500) {
+        SetEntityHealth(hidden, 500);
+    } else if (hiddenHp>0) {
+        SetEntityHealth(hidden, hiddenHp);
+    }
+}
+
+public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    
+    if (!playing) {
+        if (victim==hidden) {
+            RemoveHiddenPowers(victim);
+        }
+        return;
+    }
+    
+    if (victim==hidden) {
+        hiddenHp=0;
+        RemoveHiddenPowers(victim);
+        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
+    } else {
+        if (hidden!=0 && attacker==hidden) {
+            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
+            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+            }
+            hiddenHp+=HIDDEN_HP_PER_KILL;
+            if (hiddenHp>hiddenHpMax) {
+                hiddenHp=hiddenHpMax;
+            }
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+            CreateTimer(0.1, Timer_Dissolve, victim);
+        }
+    }
+}
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
     if (!CanPlay()) return Plugin_Continue;
@@ -478,7 +434,6 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
         
         if (buttons&IN_ATTACK) {
             changed=true;
-            
             TF2_RemoveCondition(client, TFCond_Cloaked);
             AddHiddenVisible(0.75);
         }
@@ -486,7 +441,6 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
         if (buttons&IN_ATTACK2) {
             buttons&=~IN_ATTACK2;
             changed=true;
-            
             HiddenSpecial();
         }
         
@@ -503,18 +457,68 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
     return Plugin_Continue;
 }
 
+public Action:Timer_ResetHidden(Handle:timer) {
+    ResetHidden();
+}
+
+public Action:Timer_Respawn(Handle:timer, any:data) {
+    TF2_RespawnPlayer(data);
+}
+
+public Action:Timer_Dissolve(Handle:timer, any:data) {
+    Dissolve(data, 3);
+}
+
+public Action:Timer_GiveHiddenPowers(Handle:timer, any:data) {
+    GiveHiddenPowers(GetClientOfUserId(data));
+}
+
+public Action:Timer_Tick(Handle:timer) {
+    ShowHiddenHP(TICK_INTERVAL);
+}
+
 public AddHiddenVisible(Float:value) {
     if (hiddenVisible<value) hiddenVisible=value;
 }
 
-stock ResetHidden() {
-    if (hidden!=0 && IsClientInGame(hidden)) {
-        RemoveHiddenPowers(hidden);
-        lastHiddenUserid=GetClientUserId(hidden);
-    } else {
-        lastHiddenUserid=0;
+public Action:Cmd_NextHidden(client, args) {
+    if (!started) return Plugin_Continue;
+    if (args<1) {
+        if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
+            ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
+        } else {
+            ReplyToCommand(client, "\x04[%s]\x01 Usage: sm_nexthidden <player>", PLUGIN_NAME);
+        }
+        return Plugin_Handled;
     }
-    hidden=0;
+    
+    decl String:tmp[128];
+    GetCmdArg(1, tmp, sizeof(tmp));
+    
+    new target = FindTarget(client, tmp, false, false);
+    if (target==-1) return Plugin_Handled;
+    
+    forceNextHidden = GetClientUserId(target);
+    
+    PrintToChat(client, "\x04[%s]\x01 The next hidden will be \x03%N\x01", PLUGIN_NAME, target);
+    
+    return Plugin_Handled;
+}
+
+public Action:Command_EnableHidden(client, args) {
+    new bool:cvar_enabled = GetConVarBool(cv_enabled);
+    if (cvar_enabled) return Plugin_Handled;
+    ServerCommand("tf2_hidden_enabled 1");
+    ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
+    return Plugin_Handled;
+}
+
+public Action:Command_DisableHidden(client, args) {
+    new bool:cvar_enabled = GetConVarBool(cv_enabled);
+    if (!cvar_enabled) return Plugin_Handled;
+    ServerCommand("tf2_hidden_enabled 0");
+    ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
+    return Plugin_Handled;
 }
 
 stock NewGame() {
@@ -562,6 +566,97 @@ stock NewGame() {
     newHidden=true;
 }
 
+public OnMapStart() {
+    playing=true;
+    PrecacheSound(HIDDEN_BOO_FILE, true);
+}
+
+stock DisableCps() {
+    new i = -1;
+    new CP = 0;
+
+    for (new n = 0; n <= 16; n++) {
+        CP = FindEntityByClassname(i, "trigger_capture_area");
+        if (IsValidEntity(CP)) {
+            AcceptEntityInput(CP, "Disable");
+            i = CP;
+        } else {
+            break;
+        }
+    } 
+}
+
+stock bool:IsArenaMap() {
+    decl String:curMap[32];
+    GetCurrentMap(curMap, sizeof(curMap));
+    return strncmp("arena_", curMap, 6, false)==0;
+}
+
+public OnClientDisconnect(client) {
+    if (client==hidden)
+        ResetHidden();
+}
+
+stock Dissolve(client, type) {
+    if (!IsClientInGame(client)) return;
+
+    new ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
+    if (ragdoll<0) return;
+
+    decl String:dname[32], String:dtype[32];
+    Format(dname, sizeof(dname), "dis_%d", client);
+    Format(dtype, sizeof(dtype), "%d", type);
+    
+    new ent = CreateEntityByName("env_entity_dissolver");
+    if (ent>0) {
+        DispatchKeyValue(ragdoll, "targetname", dname);
+        DispatchKeyValue(ent, "dissolvetype", dtype);
+        DispatchKeyValue(ent, "target", dname);
+        DispatchKeyValue(ent, "magnitude", "10");
+        AcceptEntityInput(ent, "Dissolve", ragdoll, ragdoll);
+        AcceptEntityInput(ent, "Kill");
+    }
+}
+
+stock bool:CanPlay() {
+    new r=0;
+    new c=0;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsClientPlaying(i)) continue;
+        ++c;
+        if (IsFakeClient(i)) continue;
+        ++r;
+    }
+    return r>0 && c>1;
+}
+
+stock IsClientPlaying(i) {
+    return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
+}
+
+stock GetClientsPlaying() {
+    new c;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        if (!IsClientPlaying(i)) continue;
+        ++c;
+    }
+    return c;
+}
+
+stock MakeTeamWin(team) {
+    new ent = FindEntityByClassname(-1, "team_control_point_master");
+    if (ent == -1) {
+        ent = CreateEntityByName("team_control_point_master");
+        DispatchSpawn(ent);
+        AcceptEntityInput(ent, "Enable");
+    }
+    
+    SetVariantInt(team);
+    AcceptEntityInput(ent, "SetWinner");
+}
+
 stock SelectHidden() {
     hidden=0;
     hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
@@ -599,9 +694,8 @@ stock SelectHidden() {
         //If there isn't any players, try to add the last hidden
         if (clientsCount==0) {
             tmp=GetClientOfUserId(lastHiddenUserid);
-            if (tmp!=0) {
+            if (tmp!=0)
                 clients[clientsCount++]=tmp;
-            }
         }
         
         //If there isn't any players, try to add bots
@@ -630,47 +724,95 @@ stock SelectHidden() {
     
     PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
     PrintToChat(hidden, "\x04[%s]\x01 \x03%attack2% to use the super jump or stick to walls, Press %reload% to use your stun attack.\x01", PLUGIN_NAME);
-    
+
     return hidden;
 }
 
-public Action:Timer_GiveHiddenPowers(Handle:timer, any:data) {
-    GiveHiddenPowers(GetClientOfUserId(data));
+public bool:TraceRay_HitWorld(entityhit, mask) {
+    return entityhit==0;
 }
 
-stock GiveHiddenPowers(i) {
-    if (!i) return;
+stock bool:HiddenSuperJump() {
+    if (hidden==0) return false;
+    if (hiddenJump>0.0) return false;
+    hiddenJump = HIDDEN_JUMP_TIME;
     
-    TF2_RemoveWeaponSlot(i, 0); // Revolver
-    //TF2_RemoveWeaponSlot(i, 1); // Sapper
-    TF2_RemoveWeaponSlot(i, 2); // Knife
-    TF2_RemoveWeaponSlot(i, 3); // Disguise Kit
-    TF2_RemoveWeaponSlot(i, 4); // Invisibility Watch
-    TF2_RemoveWeaponSlot(i, 5); // Golden Machine Gun
+    HiddenUnstick();
     
-    // This will add the knife to the spy, even if he has another unlock
-    new knife=GivePlayerItem(i, "tf_weapon_knife");
-    SetEntProp(knife, Prop_Send, "m_iItemDefinitionIndex", 4);
-    SetEntProp(knife, Prop_Send, "m_iEntityLevel", 100);
-    SetEntProp(knife, Prop_Send, "m_iEntityQuality", 10);
-    SetEntProp(knife, Prop_Send, "m_bInitialized", 1);
-    // Also, I hate extensions :p
+    decl Float:ang[3];
+    decl Float:vel[3];
+    GetClientEyeAngles(hidden, ang);
+    GetEntPropVector(hidden, Prop_Data, "m_vecAbsVelocity", vel);
     
-    EquipPlayerWeapon(i, knife);
+    decl Float:tmp[3];
     
+    GetAngleVectors(ang, tmp, NULL_VECTOR, NULL_VECTOR);
     
-    GiveHiddenVision(i);
+    vel[0] += tmp[0]*900.0;
+    vel[1] += tmp[1]*900.0;
+    vel[2] += tmp[2]*900.0;
     
-    SetEntProp(i, Prop_Send, "m_iHideHUD", HIDEHUD_HEALTH);
+    new flags=GetEntityFlags(hidden);
+    if (flags & FL_ONGROUND)
+        flags &= ~FL_ONGROUND;
+
+    SetEntityFlags(hidden, flags);
+    TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
+    AddHiddenVisible(1.0);
+    
+    return true;
 }
 
-stock RemoveHiddenPowers(i) {
-    
-    RemoveHiddenVision(i);
-    
-    SetEntProp(i, Prop_Send, "m_iHideHUD", 0);
+stock bool:HiddenSpecial() {
+    if (hidden==0) return;
+    if (HiddenStick()==-1) {
+        HiddenSuperJump();
+    }
 }
 
+stock HiddenStick() {
+    if (hidden==0) return 0;
+    
+    decl Float:pos[3];
+    decl Float:ang[3];
+    
+    GetClientEyeAngles(hidden, ang);
+    GetClientEyePosition(hidden, pos);
+    
+    new Handle:ray = TR_TraceRayFilterEx(pos, ang, MASK_ALL, RayType_Infinite, TraceRay_HitWorld);
+    if (TR_DidHit(ray)) {
+        decl Float:pos2[3];
+        TR_GetEndPosition(pos2, ray);
+        if (GetVectorDistance(pos, pos2)<64.0) {
+            if (hiddenStick || hiddenStamina<HIDDEN_STAMINA_TIME*0.7) {
+                CloseHandle(ray);
+                return 0;
+            }
+            
+            hiddenStick=true;
+            if (GetEntityMoveType(hidden)!=MOVETYPE_NONE) {
+                SetEntityMoveType(hidden, MOVETYPE_NONE);
+            }
+            CloseHandle(ray);
+            return 1;
+        } else {
+            CloseHandle(ray);
+            return -1;
+        }
+    } else {
+        CloseHandle(ray);
+        return -1;
+    }
+}
+
+public HiddenUnstick() {
+    hiddenStick=false;
+    if (GetEntityMoveType(hidden)==MOVETYPE_NONE) {
+        SetEntityMoveType(hidden, MOVETYPE_WALK);
+        new Float:vel[3];
+        TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
+    }
+}
 
 stock GiveHiddenVision(i) {
     OverlayCommand(i, HIDDEN_OVERLAY);
@@ -713,95 +855,48 @@ stock ShowHiddenHP(Float:duration) {
     #endif
 }
 
-stock bool:HiddenSpecial() {
-    if (hidden==0) return;
-    
-    if (HiddenStick()==-1) {
-        HiddenSuperJump();
-    }
+stock GiveHiddenPowers(i) {
+    if (!i) return;
+
+    TF2_RemoveWeaponSlot(i, 0); // Revolver
+    //TF2_RemoveWeaponSlot(i, 1); // Sapper
+    TF2_RemoveWeaponSlot(i, 2); // Knife
+    TF2_RemoveWeaponSlot(i, 3); // Disguise Kit
+    TF2_RemoveWeaponSlot(i, 4); // Invisibility Watch
+    TF2_RemoveWeaponSlot(i, 5); // Golden Machine Gun
+                                        
+    // This will add the knife to the spy, even if he has another unlock
+    new knife=GivePlayerItem(i, "tf_weapon_knife");
+    SetEntProp(knife, Prop_Send, "m_iItemDefinitionIndex", 4);
+    SetEntProp(knife, Prop_Send, "m_iEntityLevel", 100);
+    SetEntProp(knife, Prop_Send, "m_iEntityQuality", 10);
+    SetEntProp(knife, Prop_Send, "m_bInitialized", 1);
+    // Also, I hate extensions :p
+    EquipPlayerWeapon(i, knife);
+    GiveHiddenVision(i);
+    SetEntProp(i, Prop_Send, "m_iHideHUD", HIDEHUD_HEALTH);
 }
 
-stock HiddenStick() {
-    if (hidden==0) return 0;
-    
-    decl Float:pos[3];
-    decl Float:ang[3];
-    
-    GetClientEyeAngles(hidden, ang);
-    GetClientEyePosition(hidden, pos);
-    
-    
-    new Handle:ray = TR_TraceRayFilterEx(pos, ang, MASK_ALL, RayType_Infinite, TraceRay_HitWorld);
-    if (TR_DidHit(ray)) {
-        decl Float:pos2[3];
-        TR_GetEndPosition(pos2, ray);
-        if (GetVectorDistance(pos, pos2)<64.0) {
-            if (hiddenStick || hiddenStamina<HIDDEN_STAMINA_TIME*0.7) {
-                CloseHandle(ray);
-                return 0;
-            }
-            
-            hiddenStick=true;
-            if (GetEntityMoveType(hidden)!=MOVETYPE_NONE) {
-                SetEntityMoveType(hidden, MOVETYPE_NONE);
-            }
-            CloseHandle(ray);
-            return 1;
-        } else {
-            CloseHandle(ray);
-            return -1;
-        }
+stock RemoveHiddenPowers(i) {
+    RemoveHiddenVision(i);
+    SetEntProp(i, Prop_Send, "m_iHideHUD", 0);
+}
+
+stock ResetHidden() {
+    if (hidden!=0 && IsClientInGame(hidden)) {
+        RemoveHiddenPowers(hidden);
+        lastHiddenUserid=GetClientUserId(hidden);
     } else {
-        CloseHandle(ray);
-        return -1;
+        lastHiddenUserid=0;
     }
+    hidden=0;
 }
 
-public HiddenUnstick() {
-    hiddenStick=false;
-    if (GetEntityMoveType(hidden)==MOVETYPE_NONE) {
-        SetEntityMoveType(hidden, MOVETYPE_WALK);
-        new Float:vel[3];
-        TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
+stock OverlayCommand(client, String:overlay[]) {    
+    if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
+        SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
+        ClientCommand(client, "r_screenoverlay %s", overlay);
     }
-}
-
-public bool:TraceRay_HitWorld(entityhit, mask) {
-    return entityhit==0;
-}
-
-stock bool:HiddenSuperJump() {
-    if (hidden==0) return false;
-    if (hiddenJump>0.0) return false;
-    hiddenJump = HIDDEN_JUMP_TIME;
-    
-    HiddenUnstick();
-    
-    decl Float:ang[3];
-    decl Float:vel[3];
-    GetClientEyeAngles(hidden, ang);
-    GetEntPropVector(hidden, Prop_Data, "m_vecAbsVelocity", vel);
-    
-    
-    decl Float:tmp[3];
-    
-    GetAngleVectors(ang, tmp, NULL_VECTOR, NULL_VECTOR);
-    
-    vel[0] += tmp[0]*900.0;
-    vel[1] += tmp[1]*900.0;
-    vel[2] += tmp[2]*900.0;
-    
-    new flags=GetEntityFlags(hidden);
-    if (flags & FL_ONGROUND) {
-        flags &= ~FL_ONGROUND;
-    }
-    SetEntityFlags(hidden, flags);
-    
-    TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
-    
-    AddHiddenVisible(1.0);
-    
-    return true;
 }
 
 #if defined HIDDEN_BOO
@@ -839,131 +934,3 @@ stock bool:HiddenBoo() {
     return true;
 }
 #endif
-
-
-public Action:Timer_Respawn(Handle:timer, any:data) {
-    TF2_RespawnPlayer(data);
-}
-public Action:Timer_Tick(Handle:timer) {
-    ShowHiddenHP(TICK_INTERVAL);
-}
-
-public Action:Timer_DisableCps(Handle:timer) {
-    DisableCps();
-}
-
-stock bool:CanPlay() {
-    new r=0;
-    new c=0;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        ++c;
-        if (IsFakeClient(i)) continue;
-        ++r;
-    }
-    return r>0 && c>1;
-}
-
-stock IsClientPlaying(i) {
-    return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
-}
-
-stock GetClientsPlaying() {
-    new c;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        ++c;
-    }
-    return c;
-}
-
-stock MakeTeamWin(team) {
-    new ent = FindEntityByClassname(-1, "team_control_point_master");
-    if (ent == -1) {
-        ent = CreateEntityByName("team_control_point_master");
-        DispatchSpawn(ent);
-        AcceptEntityInput(ent, "Enable");
-    }
-    
-    SetVariantInt(team);
-    AcceptEntityInput(ent, "SetWinner");
-}
-
-stock bool:IsArenaMap() {
-    decl String:curMap[32];
-    GetCurrentMap(curMap, sizeof(curMap));
-    return strncmp("arena_", curMap, 6, false)==0;
-}
-
-stock OverlayCommand(client, String:overlay[]) {    
-    if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
-        SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
-        ClientCommand(client, "r_screenoverlay %s", overlay);
-    }
-}
-
-stock DisableCps() {
-    new i = -1;
-    new CP = 0;
-    
-    for (new n = 0; n <= 16; n++) {
-        CP = FindEntityByClassname(i, "trigger_capture_area");
-        if (IsValidEntity(CP)) {
-            AcceptEntityInput(CP, "Disable");
-            i = CP;
-        } else {
-            break;
-        }
-    }
-}
-
-public Action:Timer_Dissolve(Handle:timer, any:data) {
-    Dissolve(data, 3);
-}
-
-stock Dissolve(client, type) {
-    if (!IsClientInGame(client)) return;
-
-    new ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
-    if (ragdoll<0) return;
-
-    decl String:dname[32], String:dtype[32];
-    Format(dname, sizeof(dname), "dis_%d", client);
-    Format(dtype, sizeof(dtype), "%d", type);
-    
-    new ent = CreateEntityByName("env_entity_dissolver");
-    if (ent>0) {
-        DispatchKeyValue(ragdoll, "targetname", dname);
-        DispatchKeyValue(ent, "dissolvetype", dtype);
-        DispatchKeyValue(ent, "target", dname);
-        DispatchKeyValue(ent, "magnitude", "10");
-        AcceptEntityInput(ent, "Dissolve", ragdoll, ragdoll);
-        AcceptEntityInput(ent, "Kill");
-    }
-}
-
-public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (IsArenaMap() && GetConVarBool(cvar)) {
-        StartPlugin();
-    } else {
-        StopPlugin();
-    }
-}
-
-public Action:Command_EnableHidden(client, args) {
-    new bool:cvar_enabled = GetConVarBool(cv_enabled);
-    if (cvar_enabled) return Plugin_Handled;
-    ServerCommand("tf2_hidden_enabled 1");
-    ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
-    return Plugin_Handled;
-}
-
-public Action:Command_DisableHidden(client, args) {
-    new bool:cvar_enabled = GetConVarBool(cv_enabled);
-    if (!cvar_enabled) return Plugin_Handled;
-    ServerCommand("tf2_hidden_enabled 0");
-    ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
-    return Plugin_Handled;
-}
