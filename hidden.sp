@@ -90,6 +90,8 @@ public OnPluginStart() {
     
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     HookConVarChange(cv_enabled, cvhook_enabled);
+
+    AddCommandListener(Cmd_build, "build");
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
@@ -358,7 +360,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
         }
         newHidden=true;
     } else {
-        if (class==TFClass_Spy || class==TFClass_Engineer) {
+        if (class==TFClass_Spy) {
             TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
             CreateTimer(0.1, Timer_Respawn, client);
             if (playing) {
@@ -453,6 +455,27 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
         if (changed) {
             return Plugin_Changed
         }
+    }
+    return Plugin_Continue;
+}
+
+public Action:Cmd_build(client, String:cmd[], args)
+{
+    if (args < 1) return Plugin_Continue;
+    if (TF2_GetPlayerClass(client) != TFClass_Engineer) return Plugin_Continue;
+    decl String:arg1[32];
+    GetCmdArg(1, arg1, sizeof(arg1));
+    new building = StringToInt(arg1);
+    if (building == _:TFObject_Sentry)
+    {
+        new String:classname[] = "obj_sentrygun";
+        new i = -1;
+        while ((i = FindEntityByClassname(i, classname)) != -1)
+        {
+            SetVariantInt(GetEntProp(i, Prop_Send, "m_iHealth") + 100);
+            AcceptEntityInput(i, "RemoveHealth");
+        }
+        PrintToChat(client, "\x04[%s]\x01 You cannot build sentries in this game mode.", PLUGIN_NAME);
     }
     return Plugin_Continue;
 }
