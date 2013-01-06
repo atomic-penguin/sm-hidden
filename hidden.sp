@@ -412,7 +412,8 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             }
             SetEntProp(attacker, Prop_Send, "m_nPlayerCond", cond & ~HIDEHUD_BONUS_PROGRESS);
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim); }
+            CreateTimer(0.1, Timer_Dissolve, victim);
+        }
     }
 }
 
