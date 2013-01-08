@@ -136,6 +136,8 @@ public StopPlugin() {
     UnhookEvent("player_spawn", player_spawn);
     UnhookEvent("player_hurt", player_hurt);
     UnhookEvent("player_death", player_death);
+
+    RemoveCommandListener(Cmd_build, "build");
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
