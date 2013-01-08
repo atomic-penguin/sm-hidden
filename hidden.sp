@@ -65,7 +65,7 @@ new Float:hiddenAwayTime;
 #endif
 new bool:newHidden;
 new bool:playing;
-new bool:started; // whether plugin is active/started
+new bool:activated; // whether plugin is activated
 new forceNextHidden;
 new Handle:t_disableCps;
 new Handle:t_tick;
@@ -80,17 +80,24 @@ public OnPluginStart() {
     cv_allowpyro = CreateConVar("tf2_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_allowpyro, cvhook_allowpyro);
-
-    AddCommandListener(Cmd_build, "build");
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
     RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
 }
 
-public StartPlugin() {
-    if (started) return;
-    started=true;
+public OnPluginEnd() {
+    if (activated) {
+        for (new i=1;i<=MaxClients;++i) {
+            if (!IsClientInGame(i)) continue;
+            RemoveHiddenVision(i);
+        }
+    }
+}
+
+stock ActivatePlugin() {
+    if (activated) return;
+    activated=true;
     
     t_tick = CreateTimer(TICK_INTERVAL, Timer_Tick, _, TIMER_REPEAT);
     t_disableCps = CreateTimer(5.0, Timer_DisableCps, _, TIMER_REPEAT);
@@ -105,24 +112,17 @@ public StartPlugin() {
     HookEvent("player_hurt", player_hurt);
     HookEvent("player_death", player_death);
 
+    AddCommandListener(Cmd_build, "build");
+
     PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
     decl String:gameDesc[64];
     Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
     Steam_SetGameDescription(gameDesc);
 }
 
-public OnPluginEnd() {
-    if (started) {
-        for (new i=1;i<=MaxClients;++i) {
-            if (!IsClientInGame(i)) continue;
-            RemoveHiddenVision(i);
-        }
-    }
-}
-
-public StopPlugin() {
-    if (!started) return;
-    started=false;
+stock DeactivatePlugin() {
+    if (!activated) return;
+    activated=false;
     
     KillTimer(t_tick);
     KillTimer(t_disableCps);
@@ -142,9 +142,9 @@ public StopPlugin() {
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
     if (IsArenaMap() && GetConVarBool(cvar)) {
-        StartPlugin();
+        ActivatePlugin();
     } else {
-        StopPlugin();
+        DeactivatePlugin();
     }
 }
 
@@ -158,7 +158,7 @@ public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[
 }
 
 public OnGameFrame() {
-    if (!started) return;
+    if (!activated) return;
     if (!CanPlay()) return;
     
     new Float:tickInterval = GetTickInterval();
@@ -506,7 +506,7 @@ public AddHiddenVisible(Float:value) {
 }
 
 public Action:Cmd_NextHidden(client, args) {
-    if (!started) return Plugin_Continue;
+    if (!activated) return Plugin_Continue;
     if (args<1) {
         if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
