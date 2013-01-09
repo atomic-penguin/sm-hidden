@@ -10,7 +10,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.5.0"
+#define PLUGIN_VERSION "2.5.1"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -657,16 +657,6 @@ stock bool:CanPlay() {
 
 stock IsClientPlaying(i) {
     return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
-}
-
-stock GetClientsPlaying() {
-    new c;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        ++c;
-    }
-    return c;
 }
 
 stock MakeTeamWin(team) {
