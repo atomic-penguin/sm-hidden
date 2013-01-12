@@ -72,14 +72,19 @@ new Handle:t_tick;
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
 new Handle:cv_allowpyro;
 new bool:cvar_allowpyro;
+new Handle:cv_allowengineer;
+new bool:cvar_allowengineer;
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     cv_allowpyro = CreateConVar("tf2_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+    cv_allowengineer = CreateConVar("tf2_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_allowpyro, cvhook_allowpyro);
+    HookConVarChange(cv_allowengineer, cvhook_allowengineer);
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
@@ -154,6 +159,15 @@ public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[
         PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
     } else {
         PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    }
+}
+
+public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
+    cvar_allowengineer = GetConVarBool(cvar);
+    if (cvar_allowengineer) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
@@ -362,7 +376,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
         }
         newHidden=true;
     } else {
-        if (class==TFClass_Spy || class==TFClass_Engineer || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
             TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
             CreateTimer(0.1, Timer_Respawn, client);
             if (playing) {
@@ -575,7 +589,7 @@ stock NewGame() {
             }
             new TFClassType:class=TF2_GetPlayerClass(i);
 
-            if (class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
