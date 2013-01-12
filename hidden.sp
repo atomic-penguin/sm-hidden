@@ -153,20 +153,24 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 }
 
 public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    cvar_allowpyro = GetConVarBool(cvar);
-    if (cvar_allowpyro) {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
-    } else {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    if (activated) {
+        cvar_allowpyro = GetConVarBool(cvar);
+        if (cvar_allowpyro) {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
+        } else {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+        }
     }
 }
 
 public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    cvar_allowengineer = GetConVarBool(cvar);
-    if (cvar_allowengineer) {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
-    } else {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    if (activated) {
+        cvar_allowengineer = GetConVarBool(cvar);
+        if (cvar_allowengineer) {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+        } else {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+        }
     }
 }
 
