@@ -10,7 +10,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.5.1"
+#define PLUGIN_VERSION "2.5.2"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -654,19 +654,30 @@ stock Dissolve(client, type) {
     }
 }
 
+stock Client_GetCount(bool:countInGameOnly=true, bool:countFakeClients=true) {
+        new numClients = 0;
+        for (new client=1; client <= MaxClients; client++) {
+                if (!IsClientConnected(client)) {
+                        continue;
+                }
+                if (countInGameOnly && !IsClientInGame(client)) {
+                        continue;
+                }
+                if (!countFakeClients && IsFakeClient(client)) {
+                        continue;
+                }
+                numClients++;
+        }
+        return numClients;
+}
+
 stock bool:CanPlay() {
-    new r=0;
-    new c=0;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        ++c;
-        if (IsFakeClient(i)) continue;
-        if (IsClientSourceTV(i)) continue;
-        if (IsClientReplay(i)) continue;
-        ++r;
+    // Requires 2 or more players, excluding bots in the server.
+    if (Client_GetCount(true, false) >= 2) {
+        return true;
+    } else {
+        return false;
     }
-    return r>0 && c>1;
 }
 
 stock IsClientPlaying(i) {
