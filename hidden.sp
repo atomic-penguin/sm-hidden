@@ -409,29 +409,24 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
     new victim = GetClientOfUserId(GetEventInt(event, "userid"));
     new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
     
-    if (!playing) {
+    if (playing) {
         if (victim==hidden) {
+            hiddenHp=0;
             RemoveHiddenPowers(victim);
-        }
-        return;
-    }
-    
-    if (victim==hidden) {
-        hiddenHp=0;
-        RemoveHiddenPowers(victim);
-        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
-    } else {
-        if (hidden!=0 && attacker==hidden) {
-            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
-            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
+        } else {
+            if (hidden!=0 && attacker==hidden) {
+                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
+                if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                    hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+                }
+                hiddenHp+=HIDDEN_HP_PER_KILL;
+                if (hiddenHp>hiddenHpMax) {
+                    hiddenHp=hiddenHpMax;
+                }
+                PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+                CreateTimer(0.1, Timer_Dissolve, victim);
             }
-            hiddenHp+=HIDDEN_HP_PER_KILL;
-            if (hiddenHp>hiddenHpMax) {
-                hiddenHp=hiddenHpMax;
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim);
         }
     }
 }
