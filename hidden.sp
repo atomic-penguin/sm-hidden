@@ -342,6 +342,7 @@ public Action:Timer_NewGame(Handle:timer) {
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;
+    if (IsClientSourceTV(client) || IsClientReplay(client)) return;
 
     new HTeam:team = HTeam:GetEventInt(event, "team");
 
@@ -507,6 +508,7 @@ public AddHiddenVisible(Float:value) {
 
 public Action:Cmd_NextHidden(client, args) {
     if (!activated) return Plugin_Continue;
+    if (IsClientSourceTV(client) || IsClientReplay(client)) return Plugin_Continue;
     if (args<1) {
         if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
@@ -556,6 +558,7 @@ stock NewGame() {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (!IsClientPlaying(i)) continue;
+        if (IsClientSourceTV(i) || IsClientReplay(i)) return;
         if (i==hidden) {
             new bool:respawn=false;
             if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
@@ -576,8 +579,8 @@ stock NewGame() {
                 respawn=true;
             }
             new TFClassType:class=TF2_GetPlayerClass(i);
-            
-            if (class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer) {
+
+            if (class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
@@ -650,6 +653,8 @@ stock bool:CanPlay() {
         if (!IsClientPlaying(i)) continue;
         ++c;
         if (IsFakeClient(i)) continue;
+        if (IsClientSourceTV(i)) continue;
+        if (IsClientReplay(i)) continue;
         ++r;
     }
     return r>0 && c>1;
@@ -701,6 +706,8 @@ stock SelectHidden() {
             if (IsFakeClient(i)) continue;
             if (IsClientInKickQueue(i)) continue;
             if (IsClientTimingOut(i)) continue;
+            if (IsClientSourceTV(i)) continue;
+            if (IsClientReplay(i)) continue;
             if (GetClientUserId(i)==lastHiddenUserid) continue;
             clients[clientsCount++]=i;
         }
@@ -846,6 +853,7 @@ stock ShowHiddenHP(Float:duration) {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (IsFakeClient(i)) continue;
+        if (IsClientSourceTV(i) || IsClientReplay(i)) continue;
         if (i==hidden) continue;
         ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
     }
