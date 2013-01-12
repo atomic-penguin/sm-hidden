@@ -655,18 +655,18 @@ stock Dissolve(client, type) {
 }
 
 stock Client_GetCount(bool:countInGameOnly=true, bool:countFakeClients=true) {
-        new numClients = 0;
-        for (new client=1; client <= MaxClients; client++) {
-                if (!IsClientConnected(client)) {
-                        continue;
-                }
-                if (countInGameOnly && !IsClientInGame(client)) {
-                        continue;
-                }
-                if (!countFakeClients && IsFakeClient(client)) {
-                        continue;
-                }
-                numClients++;
+    new numClients = 0;
+    for (new client=1; client <= MaxClients; client++) {
+        if (!IsClientConnected(client)) {
+            continue;
+        }
+        if (countInGameOnly && !IsClientInGame(client)) {
+            continue;
+        }
+        if (!countFakeClients && IsFakeClient(client)) {
+            continue;
+        }
+            numClients++;
         }
         return numClients;
 }
