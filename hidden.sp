@@ -3,6 +3,7 @@
 #include <tf2>
 #include <tf2_stocks>
 #include <steamtools>
+#include <smlib>
 
 /*
  * Original code by Matheus28,
@@ -10,7 +11,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.5.2"
+#define PLUGIN_VERSION "2.5.3"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -31,8 +32,6 @@
 #define HIDDEN_BOO_FILE "vo/taunts/spy_taunts06.wav"
 #define HIDDEN_OVERLAY "effects/combine_binocoverlay"
 #define HIDDEN_COLOR {0, 0, 0, 3}
-
-#define HIDEHUD_HEALTH            (1<<3)  // Hide health & armor / suit battery
 
 public Plugin:myinfo = {
     name = PLUGIN_NAME,
@@ -654,23 +653,6 @@ stock Dissolve(client, type) {
     }
 }
 
-stock Client_GetCount(bool:countInGameOnly=true, bool:countFakeClients=true) {
-    new numClients = 0;
-    for (new client=1; client <= MaxClients; client++) {
-        if (!IsClientConnected(client)) {
-            continue;
-        }
-        if (countInGameOnly && !IsClientInGame(client)) {
-            continue;
-        }
-        if (!countFakeClients && IsFakeClient(client)) {
-            continue;
-        }
-            numClients++;
-        }
-        return numClients;
-}
-
 stock bool:CanPlay() {
     // Requires 2 or more players, excluding bots in the server.
     if (Client_GetCount(true, false) >= 2) {
@@ -916,12 +898,12 @@ stock GiveHiddenPowers(i) {
     // Also, I hate extensions :p
     EquipPlayerWeapon(i, knife);
     GiveHiddenVision(i);
-    SetEntProp(i, Prop_Send, "m_iHideHUD", HIDEHUD_HEALTH);
+    Client_SetHideHud(i, HIDEHUD_HEALTH)
 }
 
 stock RemoveHiddenPowers(i) {
     RemoveHiddenVision(i);
-    SetEntProp(i, Prop_Send, "m_iHideHUD", 0);
+    Client_SetHideHud(i, 0);
 }
 
 stock ResetHidden() {
