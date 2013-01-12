@@ -411,11 +411,6 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
     
     if (playing) {
         if (victim==hidden) {
-            RemoveHiddenPowers(victim);
-        }
-        return;
-    
-        if (victim==hidden) {
             hiddenHp=0;
             RemoveHiddenPowers(victim);
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
