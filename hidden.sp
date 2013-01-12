@@ -560,7 +560,7 @@ stock NewGame() {
     if (hidden!=0) {
         return;
     }
-    playing=false;
+    playing=true;
     SelectHidden();
     if (hidden==0) return;
     for (new i=1;i<=MaxClients;++i) {
