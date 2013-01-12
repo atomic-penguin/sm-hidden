@@ -335,16 +335,16 @@ public OnGameFrame() {
 }
 
 public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=true;
+    //playing=true;
     CreateTimer(0.5, Timer_ResetHidden);
 }
 
 public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=true;
+    //playing=true;
 }
 
 public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast) {
-    playing=false;
+    //playing=false;
     CreateTimer(0.1, Timer_NewGame);
 }
 
@@ -369,20 +369,20 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 }
 
 public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    new TFClassType:class = TF2_GetPlayerClass(client);
+    if (activated) {
+        new client = GetClientOfUserId(GetEventInt(event, "userid"));
+        new TFClassType:class = TF2_GetPlayerClass(client);
     
-    if (client==hidden) {
-        if (class!=TFClass_Spy) {
-            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-        }
-        newHidden=true;
-    } else {
-        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-            if (playing) {
+        if (client==hidden) {
+            if (class!=TFClass_Spy) {
+                TF2_SetPlayerClass(client, TFClass_Spy, true, true);
+                CreateTimer(0.1, Timer_Respawn, client);
+            }
+            newHidden=true;
+        } else {
+            if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                CreateTimer(0.1, Timer_Respawn, client);
                 PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             }
         }
@@ -390,48 +390,45 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 }
 
 public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (victim!=hidden) return;
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        if (victim!=hidden) return;
     
-    new damage = GetEventInt(event, "damageamount");
-    hiddenHp-=damage;
+        new damage = GetEventInt(event, "damageamount");
+        hiddenHp-=damage;
 
-    if (hiddenHp<0) hiddenHp=0;
+        if (hiddenHp<0) hiddenHp=0;
     
-    if (hiddenHp>500) {
-        SetEntityHealth(hidden, 500);
-    } else if (hiddenHp>0) {
-        SetEntityHealth(hidden, hiddenHp);
+        if (hiddenHp>500) {
+            SetEntityHealth(hidden, 500);
+        } else if (hiddenHp>0) {
+            SetEntityHealth(hidden, hiddenHp);
+        }
     }
 }
 
 public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
     
-    if (!playing) {
         if (victim==hidden) {
+            hiddenHp=0;
             RemoveHiddenPowers(victim);
-        }
-        return;
-    }
-    
-    if (victim==hidden) {
-        hiddenHp=0;
-        RemoveHiddenPowers(victim);
-        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
-    } else {
-        if (hidden!=0 && attacker==hidden) {
-            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
-            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
+        } else {
+            if (hidden!=0 && attacker==hidden) {
+                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
+                if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                    hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+                }
+                hiddenHp+=HIDDEN_HP_PER_KILL;
+                if (hiddenHp>hiddenHpMax) {
+                    hiddenHp=hiddenHpMax;
+                }
+                PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+                CreateTimer(0.1, Timer_Dissolve, victim);
             }
-            hiddenHp+=HIDDEN_HP_PER_KILL;
-            if (hiddenHp>hiddenHpMax) {
-                hiddenHp=hiddenHpMax;
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim);
         }
     }
 }
@@ -564,7 +561,7 @@ stock NewGame() {
     if (hidden!=0) {
         return;
     }
-    playing=true;
+    /* playing=true; */
     SelectHidden();
     if (hidden==0) return;
     for (new i=1;i<=MaxClients;++i) {
@@ -606,7 +603,7 @@ stock NewGame() {
 }
 
 public OnMapStart() {
-    playing=true;
+    /* playing=true; */
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
