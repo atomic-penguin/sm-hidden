@@ -72,14 +72,19 @@ new Handle:t_tick;
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
 new Handle:cv_allowpyro;
 new bool:cvar_allowpyro;
+new Handle:cv_allowengineer;
+new bool:cvar_allowengineer;
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     cv_allowpyro = CreateConVar("tf2_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+    cv_allowengineer = CreateConVar("tf2_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_allowpyro, cvhook_allowpyro);
+    HookConVarChange(cv_allowengineer, cvhook_allowengineer);
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
@@ -154,6 +159,15 @@ public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[
         PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
     } else {
         PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    }
+}
+
+public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
+    cvar_allowengineer = GetConVarBool(cvar);
+    if (cvar_allowengineer) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
@@ -342,6 +356,7 @@ public Action:Timer_NewGame(Handle:timer) {
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;
+    if (IsClientSourceTV(client) || IsClientReplay(client)) return;
 
     new HTeam:team = HTeam:GetEventInt(event, "team");
 
@@ -361,7 +376,7 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
         }
         newHidden=true;
     } else {
-        if (class==TFClass_Spy || class==TFClass_Engineer || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
             TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
             CreateTimer(0.1, Timer_Respawn, client);
             if (playing) {
@@ -469,13 +484,8 @@ public Action:Cmd_build(client, String:cmd[], args)
     new building = StringToInt(arg1);
     if (building == _:TFObject_Sentry)
     {
-        new String:classname[] = "obj_sentrygun";
-        new i = -1;
-        while ((i = FindEntityByClassname(i, classname)) != -1)
-        {
-            SetVariantInt(GetEntProp(i, Prop_Send, "m_iHealth") + 100);
-            AcceptEntityInput(i, "RemoveHealth");
-        }
+        new primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary); //find out player's primary weapon
+        EquipPlayerWeapon(client, primary); //switch them to that instead of build menu
         PrintToChat(client, "\x04[%s]\x01 You cannot build sentries in this game mode.", PLUGIN_NAME);
     }
     return Plugin_Continue;
@@ -507,6 +517,7 @@ public AddHiddenVisible(Float:value) {
 
 public Action:Cmd_NextHidden(client, args) {
     if (!activated) return Plugin_Continue;
+    if (IsClientSourceTV(client) || IsClientReplay(client)) return Plugin_Continue;
     if (args<1) {
         if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
@@ -556,6 +567,7 @@ stock NewGame() {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (!IsClientPlaying(i)) continue;
+        if (IsClientSourceTV(i) || IsClientReplay(i)) return;
         if (i==hidden) {
             new bool:respawn=false;
             if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
@@ -576,8 +588,8 @@ stock NewGame() {
                 respawn=true;
             }
             new TFClassType:class=TF2_GetPlayerClass(i);
-            
-            if (class==TFClass_Unknown || class==TFClass_Spy || class==TFClass_Engineer) {
+
+            if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
@@ -650,6 +662,8 @@ stock bool:CanPlay() {
         if (!IsClientPlaying(i)) continue;
         ++c;
         if (IsFakeClient(i)) continue;
+        if (IsClientSourceTV(i)) continue;
+        if (IsClientReplay(i)) continue;
         ++r;
     }
     return r>0 && c>1;
@@ -701,6 +715,8 @@ stock SelectHidden() {
             if (IsFakeClient(i)) continue;
             if (IsClientInKickQueue(i)) continue;
             if (IsClientTimingOut(i)) continue;
+            if (IsClientSourceTV(i)) continue;
+            if (IsClientReplay(i)) continue;
             if (GetClientUserId(i)==lastHiddenUserid) continue;
             clients[clientsCount++]=i;
         }
@@ -846,6 +862,7 @@ stock ShowHiddenHP(Float:duration) {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (IsFakeClient(i)) continue;
+        if (IsClientSourceTV(i) || IsClientReplay(i)) continue;
         if (i==hidden) continue;
         ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
     }
