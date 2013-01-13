@@ -1,3 +1,4 @@
+#pragma semicolon 1
 #include <sourcemod>
 #include <sdktools>
 #include <tf2>
@@ -11,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.5.3"
+#define PLUGIN_VERSION "2.6.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -48,7 +49,6 @@ enum HTeam {
     HTeam_Iris = TFTeam_Red
 }
 
-new lastHiddenUserid;
 new hidden;
 new hiddenHp;
 new hiddenHpMax;
@@ -63,9 +63,9 @@ new Float:hiddenAwayTime;
     new Float:hiddenBoo;
 #endif
 new bool:newHidden;
-new bool:playing;
+new bool:playing = 0; 
 new bool:activated; // whether plugin is activated
-new forceNextHidden;
+new forceNextHidden = 0;
 new Handle:t_disableCps;
 new Handle:t_tick;
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
@@ -369,20 +369,20 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 }
 
 public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    new TFClassType:class = TF2_GetPlayerClass(client);
+    if (activated) {
+        new client = GetClientOfUserId(GetEventInt(event, "userid"));
+        new TFClassType:class = TF2_GetPlayerClass(client);
     
-    if (client==hidden) {
-        if (class!=TFClass_Spy) {
-            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-        }
-        newHidden=true;
-    } else {
-        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-            if (playing) {
+        if (client==hidden) {
+            if (class!=TFClass_Spy) {
+                TF2_SetPlayerClass(client, TFClass_Spy, true, true);
+                CreateTimer(0.1, Timer_Respawn, client);
+            }
+            newHidden=true;
+        } else {
+            if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                CreateTimer(0.1, Timer_Respawn, client);
                 PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             }
         }
@@ -390,33 +390,37 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 }
 
 public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (victim!=hidden) return;
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        if (victim!=hidden) return;
     
-    new damage = GetEventInt(event, "damageamount");
-    hiddenHp-=damage;
+        new damage = GetEventInt(event, "damageamount");
+        hiddenHp-=damage;
 
-    if (hiddenHp<0) hiddenHp=0;
+        if (hiddenHp<0) hiddenHp=0;
     
-    if (hiddenHp>500) {
-        SetEntityHealth(hidden, 500);
-    } else if (hiddenHp>0) {
-        SetEntityHealth(hidden, hiddenHp);
+        if (hiddenHp>500) {
+            SetEntityHealth(hidden, 500);
+        } else if (hiddenHp>0) {
+            SetEntityHealth(hidden, hiddenHp);
+        }
     }
 }
 
 public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-    
-    if (playing) {
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+
+        if (!playing) return;   
+ 
         if (victim==hidden) {
             hiddenHp=0;
             RemoveHiddenPowers(victim);
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
         } else {
             if (hidden!=0 && attacker==hidden) {
-                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
+                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
                 if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
                     hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
                 }
@@ -467,7 +471,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
         }
         
         if (changed) {
-            return Plugin_Changed
+            return Plugin_Changed;
         }
     }
     return Plugin_Continue;
@@ -559,7 +563,7 @@ stock NewGame() {
     if (hidden!=0) {
         return;
     }
-    playing=true;
+    /* playing=true; */
     SelectHidden();
     if (hidden==0) return;
     for (new i=1;i<=MaxClients;++i) {
@@ -601,7 +605,7 @@ stock NewGame() {
 }
 
 public OnMapStart() {
-    playing=true;
+    /* playing=true; */
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
@@ -679,7 +683,7 @@ stock MakeTeamWin(team) {
 
 stock SelectHidden() {
     hidden=0;
-    hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
+    hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
     hiddenVisible=0.0;
     hiddenStamina=HIDDEN_STAMINA_TIME;
@@ -699,42 +703,7 @@ stock SelectHidden() {
         hidden=tmp;
         forceNextHidden=0;
     } else {
-        new clientsCount;
-        new clients[MAXPLAYERS+1];
-        for (new i=1;i<=MaxClients;++i) {
-            if (!IsClientInGame(i)) continue;
-            if (!IsClientPlaying(i)) continue;
-            if (IsFakeClient(i)) continue;
-            if (IsClientInKickQueue(i)) continue;
-            if (IsClientTimingOut(i)) continue;
-            if (IsClientSourceTV(i)) continue;
-            if (IsClientReplay(i)) continue;
-            if (GetClientUserId(i)==lastHiddenUserid) continue;
-            clients[clientsCount++]=i;
-        }
-        
-        //If there isn't any players, try to add the last hidden
-        if (clientsCount==0) {
-            tmp=GetClientOfUserId(lastHiddenUserid);
-            if (tmp!=0)
-                clients[clientsCount++]=tmp;
-        }
-        
-        //If there isn't any players, try to add bots
-        if (clientsCount==0) {
-            for (new i=1;i<=MaxClients;++i) {
-                if (!IsClientInGame(i)) continue;
-                if (!IsClientPlaying(i)) continue;
-                if (IsFakeClient(i)) continue;
-                clients[clientsCount++]=i;
-            }
-        }
-        
-        if (clientsCount==0) {
-            return hidden;
-        }
-        
-        hidden = clients[GetRandomInt(0, clientsCount-1)];
+        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
     }
     
     ChangeClientTeam(hidden, _:HTeam_Hidden);
@@ -849,7 +818,7 @@ stock ShowHiddenHP(Float:duration) {
     duration+=0.1;
     
     new Float:perc=float(hiddenHp)/float(hiddenHpMax)*100.0;
-    SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255)
+    SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255);
     
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
@@ -897,7 +866,7 @@ stock GiveHiddenPowers(i) {
     // Also, I hate extensions :p
     EquipPlayerWeapon(i, knife);
     GiveHiddenVision(i);
-    Client_SetHideHud(i, HIDEHUD_HEALTH)
+    Client_SetHideHud(i, HIDEHUD_HEALTH);
 }
 
 stock RemoveHiddenPowers(i) {
@@ -908,9 +877,6 @@ stock RemoveHiddenPowers(i) {
 stock ResetHidden() {
     if (hidden!=0 && IsClientInGame(hidden)) {
         RemoveHiddenPowers(hidden);
-        lastHiddenUserid=GetClientUserId(hidden);
-    } else {
-        lastHiddenUserid=0;
     }
     hidden=0;
 }
@@ -944,7 +910,7 @@ stock bool:HiddenBoo() {
         if (i==hidden) continue;
         GetClientAbsOrigin(i, pos2);
         if (GetVectorDistance(pos, pos2, true)>196.0*196.0) {
-            continue
+            continue;
         }
         
         TF2_StunPlayer(i, HIDDEN_BOO_DURATION, _, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_THIRDPERSON, hidden);
