@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.0"
+#define PLUGIN_VERSION "2.7.1"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -62,6 +62,7 @@ new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
 new TFClassType:g_hiddenSavedClass;
+new g_lastHidden = 0;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
 #endif
@@ -577,7 +578,7 @@ stock NewGame() {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (!IsClientPlaying(i)) continue;
-        if (IsFakeClient(i)) return;
+        if (IsFakeClient(i)) continue;
         if (i==hidden) {
             new bool:respawn=false;
             if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
@@ -585,6 +586,8 @@ stock NewGame() {
                 respawn=true;
             }
             if (TF2_GetPlayerClass(i)!=TFClass_Spy) {
+                new TFClassType:class = TF2_GetPlayerClass(i);
+                g_hiddenSavedClass = class;
                 TF2_SetPlayerClass(i, TFClass_Spy, true, true);
                 respawn=true;
             }
@@ -599,10 +602,15 @@ stock NewGame() {
             }
             new TFClassType:class=TF2_GetPlayerClass(i);
 
-            if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            if (i==g_lastHidden) {
+                TF2_SetPlayerClass(i, g_hiddenSavedClass, true, true);
+                respawn=true;
+            } else {
+                (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
+
             if (respawn) {
                 CreateTimer(0.1, Timer_Respawn, i);
             }
@@ -690,6 +698,7 @@ stock MakeTeamWin(team) {
 }
 
 stock SelectHidden() {
+    g_lastHidden = hidden;
     hidden=0;
     hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
@@ -879,7 +888,6 @@ stock GiveHiddenPowers(i) {
 stock RemoveHiddenPowers(i) {
     RemoveHiddenVision(i);
     Client_SetHideHud(i, 0);
-    TF2_SetPlayerClass(i, g_hiddenSavedClass, true, true);
 }
 
 stock ResetHidden() {
