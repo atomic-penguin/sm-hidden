@@ -1,3 +1,4 @@
+#pragma semicolon 1
 #include <sourcemod>
 #include <sdktools>
 #include <tf2>
@@ -63,7 +64,7 @@ new Float:hiddenAwayTime;
     new Float:hiddenBoo;
 #endif
 new bool:newHidden;
-new bool:playing;
+//new bool:playing;
 new bool:activated; // whether plugin is activated
 new forceNextHidden;
 new Handle:t_disableCps;
@@ -418,7 +419,7 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
         } else {
             if (hidden!=0 && attacker==hidden) {
-                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35
+                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
                 if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
                     hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
                 }
@@ -469,7 +470,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
         }
         
         if (changed) {
-            return Plugin_Changed
+            return Plugin_Changed;
         }
     }
     return Plugin_Continue;
@@ -681,7 +682,7 @@ stock MakeTeamWin(team) {
 
 stock SelectHidden() {
     hidden=0;
-    hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER)
+    hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
     hiddenVisible=0.0;
     hiddenStamina=HIDDEN_STAMINA_TIME;
@@ -851,7 +852,7 @@ stock ShowHiddenHP(Float:duration) {
     duration+=0.1;
     
     new Float:perc=float(hiddenHp)/float(hiddenHpMax)*100.0;
-    SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255)
+    SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255);
     
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
@@ -899,7 +900,7 @@ stock GiveHiddenPowers(i) {
     // Also, I hate extensions :p
     EquipPlayerWeapon(i, knife);
     GiveHiddenVision(i);
-    Client_SetHideHud(i, HIDEHUD_HEALTH)
+    Client_SetHideHud(i, HIDEHUD_HEALTH);
 }
 
 stock RemoveHiddenPowers(i) {
@@ -946,7 +947,7 @@ stock bool:HiddenBoo() {
         if (i==hidden) continue;
         GetClientAbsOrigin(i, pos2);
         if (GetVectorDistance(pos, pos2, true)>196.0*196.0) {
-            continue
+            continue;
         }
         
         TF2_StunPlayer(i, HIDDEN_BOO_DURATION, _, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_THIRDPERSON, hidden);
