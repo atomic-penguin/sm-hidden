@@ -381,7 +381,33 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
             newHidden=true;
         } else {
             if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                //if client selects a blocked class, give them a random one from these 6
+                switch (GetRandomInt(1,6)) {
+                    case 1: //scout
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Scout, true, true);
+                    }
+                    case 2: //soldier
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                    }
+                    case 3: //demoman
+                    {
+                        TF2_SetPlayerClass(client, TFClass_DemoMan, true, true);
+                    }
+                    case 4: //heavy
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Heavy, true, true);
+                    }
+                    case 5: //medic
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Medic, true, true);
+                    }
+                    case 6: //sniper
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Sniper, true, true);
+                    }
+                }
                 CreateTimer(0.1, Timer_Respawn, client);
                 PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             }
@@ -592,7 +618,33 @@ stock NewGame() {
             new TFClassType:class=TF2_GetPlayerClass(i);
 
             if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
+                //if client selects a blocked class, give them a random one from these 6
+                switch (GetRandomInt(1,6)) {
+                    case 1: //scout
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Scout, true, true);
+                    }
+                    case 2: //soldier
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                    }
+                    case 3: //demoman
+                    {
+                        TF2_SetPlayerClass(client, TFClass_DemoMan, true, true);
+                    }
+                    case 4: //heavy
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Heavy, true, true);
+                    }
+                    case 5: //medic
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Medic, true, true);
+                    }
+                    case 6: //sniper
+                    {
+                        TF2_SetPlayerClass(client, TFClass_Sniper, true, true);
+                    }
+                }
                 respawn=true;
             }
             if (respawn) {
