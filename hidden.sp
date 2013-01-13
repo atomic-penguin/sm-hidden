@@ -34,6 +34,8 @@
 #define HIDDEN_OVERLAY "effects/combine_binocoverlay"
 #define HIDDEN_COLOR {0, 0, 0, 3}
 
+#define PLAYER_FIRSTBLOOD (1 << 11)
+
 public Plugin:myinfo = {
     name = PLUGIN_NAME,
     author = PLUGIN_AUTHOR,
@@ -423,6 +425,11 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
         } else {
             if (hidden!=0 && attacker==hidden) {
+
+                // Remove firstblood crit
+                new attacker_cond = GetEntProp(killer, Prop_Send, "m_nPlayerCond");
+                SetEntProp(killer, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
+                
                 hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
                 if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
                     hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
