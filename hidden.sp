@@ -63,7 +63,7 @@ new Float:hiddenAwayTime;
     new Float:hiddenBoo;
 #endif
 new bool:newHidden;
-//new bool:playing;
+new bool:playing = 0; 
 new bool:activated; // whether plugin is activated
 new forceNextHidden = 0;
 new Handle:t_disableCps;
@@ -335,16 +335,16 @@ public OnGameFrame() {
 }
 
 public Action:teamplay_round_win(Handle:event, const String:name[], bool:dontBroadcast) {
-    //playing=true;
+    playing=true;
     CreateTimer(0.5, Timer_ResetHidden);
 }
 
 public Action:teamplay_round_active(Handle:event, const String:name[], bool:dontBroadcast) {
-    //playing=true;
+    playing=true;
 }
 
 public Action:teamplay_round_start(Handle:event, const String:name[], bool:dontBroadcast) {
-    //playing=false;
+    playing=false;
     CreateTimer(0.1, Timer_NewGame);
 }
 
@@ -411,7 +411,9 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
     if (activated) {
         new victim = GetClientOfUserId(GetEventInt(event, "userid"));
         new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-    
+
+        if (!playing) return;   
+ 
         if (victim==hidden) {
             hiddenHp=0;
             RemoveHiddenPowers(victim);
