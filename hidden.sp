@@ -427,8 +427,8 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             if (hidden!=0 && attacker==hidden) {
 
                 // Remove firstblood crit
-                new attacker_cond = GetEntProp(killer, Prop_Send, "m_nPlayerCond");
-                SetEntProp(killer, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
+                new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
+                SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
                 
                 hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
                 if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
