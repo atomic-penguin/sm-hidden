@@ -49,7 +49,6 @@ enum HTeam {
     HTeam_Iris = TFTeam_Red
 }
 
-new lastHiddenUserid = 0;
 new hidden;
 new hiddenHp;
 new hiddenHpMax;
@@ -876,9 +875,6 @@ stock RemoveHiddenPowers(i) {
 stock ResetHidden() {
     if (hidden!=0 && IsClientInGame(hidden)) {
         RemoveHiddenPowers(hidden);
-        lastHiddenUserid=GetClientUserId(hidden);
-    } else {
-        lastHiddenUserid=0;
     }
     hidden=0;
 }
