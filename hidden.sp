@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.6.1"
+#define PLUGIN_VERSION "2.7.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -59,6 +59,7 @@ new Float:hiddenVisible;
 new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
+new TFClassType:g_hiddenSavedClass;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
 #endif
@@ -358,8 +359,8 @@ public Action:Timer_NewGame(Handle:timer) {
 
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (!client || !IsClientInGame(client) || IsFakeClient(client)) return;
-    if (IsClientSourceTV(client) || IsClientReplay(client)) return;
+    if (!client || !IsClientInGame(client)) return;
+    if (IsFakeClient(client)) return;
 
     new HTeam:team = HTeam:GetEventInt(event, "team");
 
@@ -375,39 +376,14 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     
         if (client==hidden) {
             if (class!=TFClass_Spy) {
+                g_hiddenSavedClass = class;
                 TF2_SetPlayerClass(client, TFClass_Spy, true, true);
                 CreateTimer(0.1, Timer_Respawn, client);
             }
             newHidden=true;
         } else {
             if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                //if client selects a blocked class, give them a random one from these 6
-                switch (GetRandomInt(1,6)) {
-                    case 1: //scout
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Scout, true, true);
-                    }
-                    case 2: //soldier
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                    }
-                    case 3: //demoman
-                    {
-                        TF2_SetPlayerClass(client, TFClass_DemoMan, true, true);
-                    }
-                    case 4: //heavy
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Heavy, true, true);
-                    }
-                    case 5: //medic
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Medic, true, true);
-                    }
-                    case 6: //sniper
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Sniper, true, true);
-                    }
-                }
+                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
                 CreateTimer(0.1, Timer_Respawn, client);
                 PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             }
@@ -444,7 +420,7 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             hiddenHp=0;
             RemoveHiddenPowers(victim);
             forceNextHidden = GetClientUserId(attacker);
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed!", PLUGIN_NAME);
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
         } else {
             if (hidden!=0 && attacker==hidden) {
                 hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
@@ -474,8 +450,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
             }
         }
         
-        if (hiddenAway && (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0)
-        {
+        if (hiddenAway && (buttons & IN_FORWARD|IN_BACK|IN_MOVELEFT|IN_MOVERIGHT|IN_JUMP) > 0) {
             hiddenAway=false;
         }
         
@@ -511,8 +486,7 @@ public Action:Cmd_build(client, String:cmd[], args)
     decl String:arg1[32];
     GetCmdArg(1, arg1, sizeof(arg1));
     new building = StringToInt(arg1);
-    if (building == _:TFObject_Sentry)
-    {
+    if (building == _:TFObject_Sentry) {
         new primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary); //find out player's primary weapon
         EquipPlayerWeapon(client, primary); //switch them to that instead of build menu
         PrintToChat(client, "\x04[%s]\x01 You cannot build sentries in this game mode.", PLUGIN_NAME);
@@ -546,7 +520,7 @@ public AddHiddenVisible(Float:value) {
 
 public Action:Cmd_NextHidden(client, args) {
     if (!activated) return Plugin_Continue;
-    if (IsClientSourceTV(client) || IsClientReplay(client)) return Plugin_Continue;
+    if (IsFakeClient(client)) return Plugin_Continue;
     if (args<1) {
         if (GetCmdReplySource()==SM_REPLY_TO_CHAT) {
             ReplyToCommand(client, "\x04[%s]\x01 Usage: /nexthidden <player>", PLUGIN_NAME);
@@ -596,7 +570,7 @@ stock NewGame() {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (!IsClientPlaying(i)) continue;
-        if (IsClientSourceTV(i) || IsClientReplay(i)) return;
+        if (IsFakeClient(i)) return;
         if (i==hidden) {
             new bool:respawn=false;
             if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
@@ -619,33 +593,7 @@ stock NewGame() {
             new TFClassType:class=TF2_GetPlayerClass(i);
 
             if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                //if client selects a blocked class, give them a random one from these 6
-                switch (GetRandomInt(1,6)) {
-                    case 1: //scout
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Scout, true, true);
-                    }
-                    case 2: //soldier
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                    }
-                    case 3: //demoman
-                    {
-                        TF2_SetPlayerClass(client, TFClass_DemoMan, true, true);
-                    }
-                    case 4: //heavy
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Heavy, true, true);
-                    }
-                    case 5: //medic
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Medic, true, true);
-                    }
-                    case 6: //sniper
-                    {
-                        TF2_SetPlayerClass(client, TFClass_Sniper, true, true);
-                    }
-                }
+                TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
             if (respawn) {
@@ -750,10 +698,10 @@ stock SelectHidden() {
         hiddenBoo=0.0;
     #endif
     
-    new tmp=GetClientOfUserId(forceNextHidden);
+    new forced=GetClientOfUserId(forceNextHidden);
     
-    if (tmp) {
-        hidden=tmp;
+    if (forced) {
+        hidden=forced;
         forceNextHidden=0;
     } else {
         hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
@@ -924,6 +872,7 @@ stock GiveHiddenPowers(i) {
 stock RemoveHiddenPowers(i) {
     RemoveHiddenVision(i);
     Client_SetHideHud(i, 0);
+    TF2_SetPlayerClass(i, g_hiddenSavedClass, true, true);
 }
 
 stock ResetHidden() {
