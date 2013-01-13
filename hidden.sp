@@ -823,7 +823,6 @@ stock ShowHiddenHP(Float:duration) {
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (IsFakeClient(i)) continue;
-        if (IsClientSourceTV(i) || IsClientReplay(i)) continue;
         if (i==hidden) continue;
         ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
     }
