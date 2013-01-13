@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.6.0"
+#define PLUGIN_VERSION "2.6.1"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -63,7 +63,7 @@ new Float:hiddenAwayTime;
     new Float:hiddenBoo;
 #endif
 new bool:newHidden;
-new bool:playing = 0; 
+new bool:playing = false; 
 new bool:activated; // whether plugin is activated
 new forceNextHidden = 0;
 new Handle:t_disableCps;
