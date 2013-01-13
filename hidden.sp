@@ -49,7 +49,7 @@ enum HTeam {
     HTeam_Iris = TFTeam_Red
 }
 
-new lastHiddenUserid;
+new lastHiddenUserid = 0;
 new hidden;
 new hiddenHp;
 new hiddenHpMax;
@@ -66,7 +66,7 @@ new Float:hiddenAwayTime;
 new bool:newHidden;
 //new bool:playing;
 new bool:activated; // whether plugin is activated
-new forceNextHidden;
+new forceNextHidden = 0;
 new Handle:t_disableCps;
 new Handle:t_tick;
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
@@ -682,7 +682,7 @@ stock MakeTeamWin(team) {
 
 stock SelectHidden() {
     hidden=0;
-    hiddenHpMax=HIDDEN_HP+((GetClientCount(true)-1)*HIDDEN_HP_PER_PLAYER);
+    hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
     hiddenVisible=0.0;
     hiddenStamina=HIDDEN_STAMINA_TIME;
@@ -702,42 +702,7 @@ stock SelectHidden() {
         hidden=tmp;
         forceNextHidden=0;
     } else {
-        new clientsCount;
-        new clients[MAXPLAYERS+1];
-        for (new i=1;i<=MaxClients;++i) {
-            if (!IsClientInGame(i)) continue;
-            if (!IsClientPlaying(i)) continue;
-            if (IsFakeClient(i)) continue;
-            if (IsClientInKickQueue(i)) continue;
-            if (IsClientTimingOut(i)) continue;
-            if (IsClientSourceTV(i)) continue;
-            if (IsClientReplay(i)) continue;
-            if (GetClientUserId(i)==lastHiddenUserid) continue;
-            clients[clientsCount++]=i;
-        }
-        
-        //If there isn't any players, try to add the last hidden
-        if (clientsCount==0) {
-            tmp=GetClientOfUserId(lastHiddenUserid);
-            if (tmp!=0)
-                clients[clientsCount++]=tmp;
-        }
-        
-        //If there isn't any players, try to add bots
-        if (clientsCount==0) {
-            for (new i=1;i<=MaxClients;++i) {
-                if (!IsClientInGame(i)) continue;
-                if (!IsClientPlaying(i)) continue;
-                if (IsFakeClient(i)) continue;
-                clients[clientsCount++]=i;
-            }
-        }
-        
-        if (clientsCount==0) {
-            return hidden;
-        }
-        
-        hidden = clients[GetRandomInt(0, clientsCount-1)];
+        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
     }
     
     ChangeClientTeam(hidden, _:HTeam_Hidden);
