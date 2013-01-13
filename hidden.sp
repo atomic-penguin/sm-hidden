@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.1"
+#define PLUGIN_VERSION "2.7.2"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -605,8 +605,7 @@ stock NewGame() {
             if (i==g_lastHidden) {
                 TF2_SetPlayerClass(i, g_hiddenSavedClass, true, true);
                 respawn=true;
-            } else {
-                (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
                 respawn=true;
             }
