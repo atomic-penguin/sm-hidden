@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.2"
+#define PLUGIN_VERSION "2.7.3"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -422,7 +422,9 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
         if (victim==hidden) {
             hiddenHp=0;
             RemoveHiddenPowers(victim);
-            forceNextHidden = GetClientUserId(attacker);
+            if (attacker!=hidden) {
+                forceNextHidden = GetClientUserId(attacker);
+            }
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
         } else {
             if (hidden!=0 && attacker==hidden) {
