@@ -97,11 +97,9 @@ public OnPluginStart() {
 }
 
 public OnPluginEnd() {
-    if (activated) {
-        for (new i=1;i<=MaxClients;++i) {
-            if (!IsClientInGame(i)) continue;
-            RemoveHiddenVision(i);
-        }
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        RemoveHiddenVision(i);
     }
 }
 
