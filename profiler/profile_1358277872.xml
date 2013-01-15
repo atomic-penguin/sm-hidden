@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<profile time="1358277872" uptime="714.406032">
+ <report name="natives">
+ </report>
+ <report name="callbacks">
+  <item name="hidden.smx!__ext_core_SetNTVOptional" numcalls="1" mintime="0.000009" maxtime="0.000009" totaltime="0.000009"/>
+  <item name="hidden.smx!OnPluginStart" numcalls="1" mintime="0.000738" maxtime="0.000738" totaltime="0.000738"/>
+  <item name="hidden.smx!OnMapStart" numcalls="1" mintime="0.000005" maxtime="0.000005" totaltime="0.000005"/>
+  <item name="hidden.smx!Command_EnableHidden" numcalls="1" mintime="0.000111" maxtime="0.000111" totaltime="0.000111"/>
+  <item name="hidden.smx!cvhook_enabled" numcalls="1" mintime="0.000127" maxtime="0.000127" totaltime="0.000127"/>
+  <item name="hidden.smx!OnGameFrame" numcalls="47284" mintime="0.000001" maxtime="0.002172" totaltime="0.767586"/>
+  <item name="hidden.smx!OnPlayerRunCmd" numcalls="87762" mintime="0.000000" maxtime="0.000202" totaltime="0.161892"/>
+  <item name="hidden.smx!teamplay_round_start" numcalls="17" mintime="0.000001" maxtime="0.000008" totaltime="0.000039"/>
+  <item name="hidden.smx!Timer_Tick" numcalls="7092" mintime="0.000000" maxtime="0.000052" totaltime="0.047685"/>
+  <item name="hidden.smx!Timer_NewGame" numcalls="17" mintime="0.000001" maxtime="0.006832" totaltime="0.049092"/>
+  <item name="hidden.smx!Timer_DisableCps" numcalls="141" mintime="0.000014" maxtime="0.000071" totaltime="0.003649"/>
+  <item name="hidden.smx!player_spawn" numcalls="42" mintime="0.000000" maxtime="0.000048" totaltime="0.000181"/>
+  <item name="hidden.smx!player_team" numcalls="64" mintime="0.000001" maxtime="0.000852" totaltime="0.005243"/>
+  <item name="hidden.smx!player_death" numcalls="30" mintime="0.000001" maxtime="0.000311" totaltime="0.000607"/>
+  <item name="hidden.smx!Timer_GiveHiddenPowers" numcalls="11" mintime="0.000227" maxtime="0.000820" totaltime="0.004864"/>
+  <item name="hidden.smx!player_hurt" numcalls="32" mintime="0.000001" maxtime="0.000010" totaltime="0.000085"/>
+  <item name="hidden.smx!teamplay_round_active" numcalls="8" mintime="0.000000" maxtime="0.000005" totaltime="0.000010"/>
+  <item name="hidden.smx!TraceRay_HitWorld" numcalls="426" mintime="0.000000" maxtime="0.000002" totaltime="0.000149"/>
+  <item name="hidden.smx!teamplay_round_win" numcalls="8" mintime="0.000002" maxtime="0.000007" totaltime="0.000021"/>
+  <item name="hidden.smx!Timer_Dissolve" numcalls="5" mintime="0.000054" maxtime="0.000106" totaltime="0.000376"/>
+  <item name="hidden.smx!Timer_ResetHidden" numcalls="8" mintime="0.000121" maxtime="0.000195" totaltime="0.001266"/>
+  <item name="hidden.smx!Timer_Respawn" numcalls="5" mintime="0.003593" maxtime="0.003931" totaltime="0.018758"/>
+ </report>
+ <report name="functions">
+ </report>
+</profile>
