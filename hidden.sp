@@ -63,6 +63,7 @@ new bool:hiddenAway;
 new Float:hiddenAwayTime;
 new TFClassType:g_hiddenSavedClass;
 new TFClassType:g_lastHiddenSavedClass;
+new bool:g_lastHiddenClassCorrected=true;
 new g_lastHidden = 0;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
@@ -385,6 +386,17 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
                 CreateTimer(0.1, Timer_Respawn, client);
             }
             newHidden=true;
+        } else if (client==g_lastHidden) {
+            if (!g_lastHiddenClassCorrected) { //if we haven't set them to their pre-hidden class choice
+                TF2_SetPlayerClass(client, g_lastHiddenSavedClass, true, true);
+                g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
+                CreateTimer(0.1, Timer_Respawn, client);
+            } else if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+                //otherwise validate their new class choice as per usual
+                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+                CreateTimer(0.1, Timer_Respawn, client);
+                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+            }
         } else {
             if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
@@ -701,6 +713,7 @@ stock MakeTeamWin(team) {
 stock SelectHidden() {
     g_lastHidden = hidden; //client id of last hidden
     g_lastHiddenSavedClass = g_hiddenSavedClass; //copy last hidden's class from before their round as hidden
+    g_lastHiddenClassCorrected=false;
     hidden=0;
     hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
