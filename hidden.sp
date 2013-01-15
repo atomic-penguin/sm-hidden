@@ -497,9 +497,8 @@ public Action:Cmd_build(client, String:cmd[], args)
     GetCmdArg(1, arg1, sizeof(arg1));
     new building = StringToInt(arg1);
     if (building == _:TFObject_Sentry) {
-        new primary = GetPlayerWeaponSlot(client, TFWeaponSlot_Primary); //find out player's primary weapon
-        EquipPlayerWeapon(client, primary); //switch them to that instead of build menu
         PrintToChat(client, "\x04[%s]\x01 You cannot build sentries in this game mode.", PLUGIN_NAME);
+        return Plugin_Handled;
     }
     return Plugin_Continue;
 }
