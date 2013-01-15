@@ -157,24 +157,22 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 }
 
 public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (activated) {
-        cvar_allowpyro = GetConVarBool(cvar);
-        if (cvar_allowpyro) {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
-        } else {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
-        }
+    if (!activated) return; 
+    cvar_allowpyro = GetConVarBool(cvar);
+    if (cvar_allowpyro) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
 public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (activated) {
-        cvar_allowengineer = GetConVarBool(cvar);
-        if (cvar_allowengineer) {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
-        } else {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
-        }
+    if (!activated)
+    cvar_allowengineer = GetConVarBool(cvar);
+    if (cvar_allowengineer) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
@@ -373,93 +371,87 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 }
 
 public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new client = GetClientOfUserId(GetEventInt(event, "userid"));
-        new TFClassType:class = TF2_GetPlayerClass(client);
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    new TFClassType:class = TF2_GetPlayerClass(client);
     
-        if (client==hidden) {
-            if (class!=TFClass_Spy) {
-                g_hiddenSavedClass = class;
-                TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-            }
-            newHidden=true;
-        } else if (client==g_lastHidden) {
-            if (!g_lastHiddenClassCorrected) { //if we haven't set them to their pre-hidden class choice
-                TF2_SetPlayerClass(client, g_lastHiddenSavedClass, true, true);
-                g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
-                CreateTimer(0.1, Timer_Respawn, client);
-            } else if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                //otherwise validate their new class choice as per usual
-                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            }
-        } else {
-            if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            }
+    if (client==hidden) {
+        if (class!=TFClass_Spy) {
+            g_hiddenSavedClass = class;
+            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+        }
+        newHidden=true;
+    } else if (client==g_lastHidden) {
+        if (!g_lastHiddenClassCorrected) { //if we haven't set them to their pre-hidden class choice
+            TF2_SetPlayerClass(client, g_lastHiddenSavedClass, true, true);
+            g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
+            CreateTimer(0.1, Timer_Respawn, client);
+        } else if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            //otherwise validate their new class choice as per usual
+            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+        }
+    } else {
+        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
         }
     }
 }
 
 public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-        if (victim!=hidden) return;
-    
-        new damage = GetEventInt(event, "damageamount");
-        hiddenHp-=damage;
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    if (victim!=hidden) return;
+   
+    new damage = GetEventInt(event, "damageamount");
+    hiddenHp-=damage;
 
-        if (hiddenHp<0) hiddenHp=0;
+    if (hiddenHp<0) hiddenHp=0;
     
-        if (hiddenHp>500) {
-            SetEntityHealth(hidden, 500);
-        } else if (hiddenHp>0) {
-            SetEntityHealth(hidden, hiddenHp);
-        }
+    if (hiddenHp>500) {
+        SetEntityHealth(hidden, 500);
+    } else if (hiddenHp>0) {
+        SetEntityHealth(hidden, hiddenHp);
     }
 }
 
 public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-        new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-        if (!playing) return;   
+    if (!playing) return;   
  
-        if (victim==hidden) {
-            hiddenHp=0;
-            RemoveHiddenPowers(victim);
-            if (attacker!=hidden) {
-                forceNextHidden = GetClientUserId(attacker);
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
-        } else {
-            if (hidden!=0 && attacker==hidden) {
-
-                // Remove firstblood crit
-                new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
-                SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
-                
-                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
-                if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                    hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
-                }
-                hiddenHp+=HIDDEN_HP_PER_KILL;
-                if (hiddenHp>hiddenHpMax) {
-                    hiddenHp=hiddenHpMax;
-                }
-                PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-                CreateTimer(0.1, Timer_Dissolve, victim);
-            }
+    if (victim==hidden) {
+        hiddenHp=0;
+        RemoveHiddenPowers(victim);
+        if (attacker!=hidden) {
+            forceNextHidden = GetClientUserId(attacker);
         }
-    }
+        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
+    } else {
+        if (hidden!=0 && attacker==hidden) {
+
+            // Remove firstblood crit
+            new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
+            SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
+               
+            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
+            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+            }
+            hiddenHp+=HIDDEN_HP_PER_KILL;
+            if (hiddenHp>hiddenHpMax) {
+                hiddenHp=hiddenHpMax;
+            }
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+            CreateTimer(0.1, Timer_Dissolve, victim);
+        }
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
+    if (!activated) return; 
     if (!CanPlay()) return Plugin_Continue;
     if (client==hidden) {
         new bool:changed=false;
