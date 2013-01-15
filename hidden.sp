@@ -62,6 +62,7 @@ new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
 new TFClassType:g_hiddenSavedClass;
+new TFClassType:g_lastHiddenSavedClass;
 new g_lastHidden = 0;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
@@ -605,7 +606,7 @@ stock NewGame() {
             new TFClassType:class=TF2_GetPlayerClass(i);
 
             if (i==g_lastHidden) {
-                TF2_SetPlayerClass(i, g_hiddenSavedClass, true, true);
+                TF2_SetPlayerClass(i, g_lastHiddenSavedClass, true, true); //restore last hidden's previous class, not *this* hiddens previous class
                 respawn=true;
             } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
                 TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
@@ -699,7 +700,8 @@ stock MakeTeamWin(team) {
 }
 
 stock SelectHidden() {
-    g_lastHidden = hidden;
+    g_lastHidden = hidden; //client id of last hidden
+    g_lastHiddenSavedClass = g_hiddenSavedClass; //copy last hidden's class from before their round as hidden
     hidden=0;
     hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
@@ -725,6 +727,7 @@ stock SelectHidden() {
     }
     
     ChangeClientTeam(hidden, _:HTeam_Hidden);
+    g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
     TF2_SetPlayerClass(hidden, TFClass_Spy, true, true);
     
     if (!IsPlayerAlive(hidden)) {
