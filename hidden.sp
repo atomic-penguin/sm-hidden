@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.6b"
+#define PLUGIN_VERSION "2.7.7b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -62,7 +62,7 @@ new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
 new TFClassType:g_hiddenSavedClass;
-new TFClassType:g_lastHiddenSavedClass;
+//new TFClassType:g_lastHiddenSavedClass;
 new bool:g_lastHiddenClassCorrected=true;
 new g_lastHidden = 0;
 #if defined HIDDEN_BOO
@@ -378,13 +378,13 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     new TFClassType:class = TF2_GetPlayerClass(client);
     
-    if (client==hidden) {
+    if ((client==hidden) && (class!=TFClass_Spy)) {
         g_hiddenSavedClass = class;
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         CreateTimer(0.1, Timer_Respawn, client);
         newHidden=true;
     } else if ((client==g_lastHidden) && (!g_lastHiddenClassCorrected) && (client != hidden)) { //if we haven't set them to their pre-hidden class choice
-        TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
+        TF2_SetPlayerClass(client, g_hiddenSavedClass, false, true);
         g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
         CreateTimer(0.1, Timer_Respawn, client);
     } else {
@@ -730,7 +730,7 @@ stock SelectHidden() {
     
     ChangeClientTeam(hidden, _:HTeam_Hidden);
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
-    TF2_SetPlayerClass(hidden, TFClass_Spy, true, true);
+    TF2_SetPlayerClass(hidden, TFClass_Spy, false, true);
     
     if (!IsPlayerAlive(hidden)) {
         TF2_RespawnPlayer(hidden);
