@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.5"
+#define PLUGIN_VERSION "2.7.6b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -375,34 +375,23 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 }
 
 public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new client = GetClientOfUserId(GetEventInt(event, "userid"));
-        new TFClassType:class = TF2_GetPlayerClass(client);
+    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    new TFClassType:class = TF2_GetPlayerClass(client);
     
-        if (client==hidden) {
-            if (class!=TFClass_Spy) {
-                g_hiddenSavedClass = class;
-                TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-            }
-            newHidden=true;
-        } else if (client==g_lastHidden) {
-            if (!g_lastHiddenClassCorrected) { //if we haven't set them to their pre-hidden class choice
-                TF2_SetPlayerClass(client, g_lastHiddenSavedClass, true, true);
-                g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
-                CreateTimer(0.1, Timer_Respawn, client);
-            } else if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                //otherwise validate their new class choice as per usual
-                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            }
-        } else {
-            if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-                CreateTimer(0.1, Timer_Respawn, client);
-                PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            }
+    if (client==hidden) {
+        g_hiddenSavedClass = class;
+        TF2_SetPlayerClass(client, TFClass_Spy, false, true);
+        CreateTimer(0.1, Timer_Respawn, client);
+        newHidden=true;
+    } else if ((client==g_lastHidden) && (!g_lastHiddenClassCorrected) && (client != hidden)) { //if we haven't set them to their pre-hidden class choice
+        TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
+        g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
+        CreateTimer(0.1, Timer_Respawn, client);
+    } else {
+        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            CreateTimer(0.1, Timer_Respawn, client);
+            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
         }
     }
 }
@@ -583,12 +572,11 @@ public Action:Command_DisableHidden(client, args) {
 
 stock NewGame() {
     if (!CanPlay()) return;
-    if (hidden!=0) {
-        return;
-    }
+    if (hidden!=0) return;
+
     /* playing=true; */
     SelectHidden();
-    if (hidden==0) return;
+/*  if (hidden==0) return;
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
         if (!IsClientPlaying(i)) continue;
@@ -630,6 +618,8 @@ stock NewGame() {
             PrintToChat(i, "\x04[%s]\x01 \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_NAME, hidden);
         }
     }
+*/
+    Client_RespawnAll();
     newHidden=true;
 }
 
@@ -917,6 +907,12 @@ stock OverlayCommand(client, String:overlay[]) {
     if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
         SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
         ClientCommand(client, "r_screenoverlay %s", overlay);
+    }
+}
+
+stock Client_RespawnAll() {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS) {
+        CreateTimer(0.1, Timer_Respawn, client);
     }
 }
 
