@@ -74,6 +74,7 @@ new forceNextHidden = 0;
 new Handle:t_disableCps;
 new Handle:t_tick;
 new Handle:cv_enabled; // Internal for tf2_hidden_enabled
+new Handle:cv_hidden_alltalk; // Internal for tf2_hidden_alltalk
 new Handle:cv_allowpyro;
 new bool:cvar_allowpyro;
 new Handle:cv_allowengineer;
@@ -83,10 +84,12 @@ public OnPluginStart() {
     LoadTranslations("common.phrases");
     
     cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+    cv_hidden_alltalk = CreateConVar("tf2_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     cv_allowpyro = CreateConVar("tf2_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
     cv_allowengineer = CreateConVar("tf2_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
     HookConVarChange(cv_enabled, cvhook_enabled);
+    HookConVarChange(cv_hidden_alltalk, cvhook_hidden_alltalk);
     HookConVarChange(cv_allowpyro, cvhook_allowpyro);
     HookConVarChange(cv_allowengineer, cvhook_allowengineer);
    
@@ -154,6 +157,18 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
         ActivatePlugin();
     } else {
         DeactivatePlugin();
+    }
+}
+
+public cvhook_hidden_alltalk(Handle:cvar, const String:oldVal[], const String:newVal[]) {
+    if (GetConVarBool(cvar)) {
+        ServerCommand("sv_alltalk 1");
+        ServerCommand("mp_show_voice_icons 0");
+        PrintToChatAll("\x04[%s]\x01 \x03Alltalk is now ON.\x01", PLUGIN_NAME);
+    } else {
+        ServerCommand("sv_alltalk 0");
+        ServerCommand("mp_show_voice_icons 1");
+        PrintToChatAll("\x04[%s]\x01 \x03Alltalk is now OFF.\x01", PLUGIN_NAME);
     }
 }
 
