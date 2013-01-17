@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.8.0"
+#define PLUGIN_VERSION "2.8.2"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -73,8 +73,11 @@ new bool:activated; // whether plugin is activated
 new forceNextHidden = 0;
 new Handle:t_disableCps;
 new Handle:t_tick;
-new Handle:cv_enabled; // Internal for tf2_hidden_enabled
-new Handle:cv_hidden_alltalk; // Internal for tf2_hidden_alltalk
+new Handle:cv_enabled; // Internal for sm_hidden_enabled
+new Handle:cv_hidden_alltalk; // Internal for sm_hidden_alltalk
+new Handle:cv_hidden_visible_damage; //Internal for sm_hidden_visible_damage
+new Handle:cv_hidden_visible_jarate; //Internal for sm_hidden_visible_jarate
+new Handle:cv_hidden_visible_pounce; //Internal for sm_hidden_visible_pounce
 new Handle:cv_allowpyro;
 new bool:cvar_allowpyro;
 new Handle:cv_allowengineer;
@@ -83,10 +86,13 @@ new bool:cvar_allowengineer;
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
-    cv_enabled = CreateConVar("tf2_hidden_enabled", "0", "Enables/disables the plugin.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
-    cv_hidden_alltalk = CreateConVar("tf2_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
-    cv_allowpyro = CreateConVar("tf2_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
-    cv_allowengineer = CreateConVar("tf2_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", FCVAR_NOTIFY | FCVAR_PLUGIN, true, 0.0, true, 1.0);
+    cv_enabled = CreateConVar("sm_hidden_enabled", "0", "Enables/disables the plugin.", _, true, 0.0, true, 1.0);
+    cv_hidden_alltalk = CreateConVar("sm_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", _, true, 0.0, true, 1.0);
+    cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", _, true, 0.0, true, 1.0);
+    cv_allowengineer = CreateConVar("sm_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", _, true, 0.0, true, 1.0);
+    cv_hidden_visible_damage = CreateConVar("sm_hidden_visible_damage", "0.5", "Amount of time (seconds) Hidden is visible when taking weapon damage.", _, true, 0.0, true, 3.0);
+    cv_hidden_visible_jarate = CreateConVar("sm_hidden_visible_jarate", "1.0", "Amount of time (seconds) Hidden is visible when splashed with jarate, mad milk, or bonked.", _, true, 0.0, true, 3.0);
+    cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.0", "Amount of time (seconds) Hidden is visible when pouncing.", _, true, 0.0, true, 3.0);
 
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_hidden_alltalk, cvhook_hidden_alltalk);
@@ -94,8 +100,8 @@ public OnPluginStart() {
     HookConVarChange(cv_allowengineer, cvhook_allowengineer);
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
-    RegAdminCmd("tf2_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 1");
-    RegAdminCmd("tf2_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the tf2_hidden_enabled cvar to 0"); 
+    RegAdminCmd("sm_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 1");
+    RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0"); 
 }
 
 public OnPluginEnd() {
@@ -164,11 +170,9 @@ public cvhook_hidden_alltalk(Handle:cvar, const String:oldVal[], const String:ne
     if (GetConVarBool(cvar)) {
         ServerCommand("sv_alltalk 1");
         ServerCommand("mp_show_voice_icons 0");
-        PrintToChatAll("\x04[%s]\x01 \x03Alltalk is now ON.\x01", PLUGIN_NAME);
     } else {
         ServerCommand("sv_alltalk 0");
         ServerCommand("mp_show_voice_icons 1");
-        PrintToChatAll("\x04[%s]\x01 \x03Alltalk is now OFF.\x01", PLUGIN_NAME);
     }
 }
 
@@ -199,6 +203,8 @@ public OnGameFrame() {
     if (!CanPlay()) return;
     
     new Float:tickInterval = GetTickInterval();
+    new Float:f_hiddenVisibleDamage = GetConVarFloat(cv_hidden_visible_damage);
+    new Float:f_hiddenVisibleJarate = GetConVarFloat(cv_hidden_visible_jarate);
     
     for (new i=1;i<=MaxClients;++i) {
         if (!IsClientInGame(i)) continue;
@@ -304,7 +310,7 @@ public OnGameFrame() {
             }
                         
             if (TF2_IsPlayerInCondition(i, TFCond_OnFire)) {
-                AddHiddenVisible(0.5);
+                AddHiddenVisible(f_hiddenVisibleDamage);
                 TF2_RemoveCondition(i, TFCond_OnFire);
                 GiveHiddenVision(i);
             }
@@ -315,23 +321,23 @@ public OnGameFrame() {
             }
             
             if (TF2_IsPlayerInCondition(i, TFCond_Jarated)) {
-                AddHiddenVisible(1.0);
+                AddHiddenVisible(f_hiddenVisibleJarate);
                 TF2_RemoveCondition(i, TFCond_Jarated);
                 GiveHiddenVision(i);
             }
             
             if (TF2_IsPlayerInCondition(i, TFCond_Milked)) {
-                AddHiddenVisible(0.75);
+                AddHiddenVisible(f_hiddenVisibleJarate);
                 TF2_RemoveCondition(i, TFCond_Milked);
             }
             
             if (TF2_IsPlayerInCondition(i, TFCond_Bonked)) {
-                AddHiddenVisible(1.0);
+                AddHiddenVisible(f_hiddenVisibleJarate);
                 TF2_RemoveCondition(i, TFCond_Bonked);
             }
             
             if (TF2_IsPlayerInCondition(i, TFCond_Bleeding)) {
-                AddHiddenVisible(0.5);
+                AddHiddenVisible(f_hiddenVisibleDamage);
                 TF2_RemoveCondition(i, TFCond_Bleeding);
                 GiveHiddenVision(i);
             }
@@ -570,7 +576,7 @@ public Action:Cmd_NextHidden(client, args) {
 public Action:Command_EnableHidden(client, args) {
     new bool:cvar_enabled = GetConVarBool(cv_enabled);
     if (cvar_enabled) return Plugin_Handled;
-    ServerCommand("tf2_hidden_enabled 1");
+    ServerCommand("sm_hidden_enabled 1");
     ReplyToCommand(client, "[%s] Enabled.", PLUGIN_NAME);
     return Plugin_Handled;
 }
@@ -578,7 +584,7 @@ public Action:Command_EnableHidden(client, args) {
 public Action:Command_DisableHidden(client, args) {
     new bool:cvar_enabled = GetConVarBool(cv_enabled);
     if (!cvar_enabled) return Plugin_Handled;
-    ServerCommand("tf2_hidden_enabled 0");
+    ServerCommand("sm_hidden_enabled 0");
     ReplyToCommand(client, "[%s] Disabled.", PLUGIN_NAME);
     return Plugin_Handled;
 }
@@ -717,6 +723,7 @@ stock bool:HiddenSuperJump() {
     if (hidden==0) return false;
     if (hiddenJump>0.0) return false;
     hiddenJump = HIDDEN_JUMP_TIME;
+    new Float:f_hiddenVisiblePounce = GetConVarFloat(cv_hidden_visible_pounce);
     
     HiddenUnstick();
     
@@ -739,7 +746,7 @@ stock bool:HiddenSuperJump() {
 
     SetEntityFlags(hidden, flags);
     TeleportEntity(hidden, NULL_VECTOR, NULL_VECTOR, vel);
-    AddHiddenVisible(1.0);
+    AddHiddenVisible(f_hiddenVisiblePounce);
     
     return true;
 }
