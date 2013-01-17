@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.7b"
+#define PLUGIN_VERSION "2.7.8b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -51,7 +51,7 @@ enum HTeam {
     HTeam_Iris = TFTeam_Red
 }
 
-new hidden;
+new hidden=0;
 new hiddenHp;
 new hiddenHpMax;
 new bool:hiddenStick;
@@ -61,10 +61,9 @@ new Float:hiddenVisible;
 new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
-new TFClassType:g_hiddenSavedClass;
-//new TFClassType:g_lastHiddenSavedClass;
-new bool:g_lastHiddenClassCorrected=true;
-new g_lastHidden = 0;
+new TFClassType:g_hiddenSavedClass=TFClass_Unknown;
+new TFClassType:g_lastHiddenSavedClass=TFClass_Unknown;
+new g_lastHidden=0;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
 #endif
@@ -381,17 +380,20 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     if ((client==hidden) && (class!=TFClass_Spy)) {
         g_hiddenSavedClass = class;
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
-        CreateTimer(0.1, Timer_Respawn, client);
+        PrintToChat(client, "\x04[%s]\x01 Setting class to Spy.", PLUGIN_NAME);
         newHidden=true;
-    } else if ((client==g_lastHidden) && (!g_lastHiddenClassCorrected) && (client != hidden)) { //if we haven't set them to their pre-hidden class choice
-        TF2_SetPlayerClass(client, g_hiddenSavedClass, false, true);
-        g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
+        CreateTimer(0.1, Timer_Respawn, client);
+    } else if ((client==g_lastHidden) && (client != hidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
+        TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
+        PrintToChat(client, "\x04[%s]\x01 Saving class as %s", PLUGIN_NAME, g_lastHiddenSavedClass);
+        g_lastHiddenSavedClass=TFClass_Unknown;
+        g_lastHidden=0;
         CreateTimer(0.1, Timer_Respawn, client);
     } else {
-        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+        if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
             TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-            CreateTimer(0.1, Timer_Respawn, client);
             PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+            CreateTimer(0.1, Timer_Respawn, client);
         }
     }
 }
@@ -701,10 +703,10 @@ stock MakeTeamWin(team) {
 }
 
 stock SelectHidden() {
-    g_lastHidden = hidden; //client id of last hidden
-    g_lastHiddenSavedClass = g_hiddenSavedClass; //copy last hidden's class from before their round as hidden
-    g_lastHiddenClassCorrected=false;
+    g_lastHidden=hidden; //Save this to restore class in player spawn
+    g_lastHiddenSavedClass=g_hiddenSavedClass;  //Save this to restore class in player_spawn
     hidden=0;
+    g_hiddenSavedClass=TFClass_Unknown;
     hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
     hiddenVisible=0.0;
@@ -727,9 +729,9 @@ stock SelectHidden() {
     } else {
         hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
     }
-    
-    ChangeClientTeam(hidden, _:HTeam_Hidden);
+   
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
+    ChangeClientTeam(hidden, _:HTeam_Hidden); 
     TF2_SetPlayerClass(hidden, TFClass_Spy, false, true);
     
     if (!IsPlayerAlive(hidden)) {
