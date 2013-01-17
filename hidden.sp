@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.8b"
+#define PLUGIN_VERSION "2.8.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -380,21 +380,17 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     if ((client==hidden) && (class!=TFClass_Spy)) {
         g_hiddenSavedClass = class;
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
-        PrintToChat(client, "\x04[%s]\x01 Setting class to Spy.", PLUGIN_NAME);
         newHidden=true;
         CreateTimer(0.1, Timer_Respawn, client);
     } else if ((client==g_lastHidden) && (client != hidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
         TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
-        PrintToChat(client, "\x04[%s]\x01 Saving class as %s", PLUGIN_NAME, g_lastHiddenSavedClass);
         g_lastHiddenSavedClass=TFClass_Unknown;
         g_lastHidden=0;
         CreateTimer(0.1, Timer_Respawn, client);
-    } else {
-        if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-            CreateTimer(0.1, Timer_Respawn, client);
-        }
+    } else if (client!=hidden && (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro)))) {
+        TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+        PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+        CreateTimer(0.1, Timer_Respawn, client);
     }
 }
 
@@ -575,58 +571,12 @@ public Action:Command_DisableHidden(client, args) {
 stock NewGame() {
     if (!CanPlay()) return;
     if (hidden!=0) return;
-
-    /* playing=true; */
     SelectHidden();
-/*  if (hidden==0) return;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        if (IsFakeClient(i)) continue;
-        if (i==hidden) {
-            new bool:respawn=false;
-            if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
-                ChangeClientTeam(i, _:HTeam_Hidden);
-                respawn=true;
-            }
-            if (TF2_GetPlayerClass(i)!=TFClass_Spy) {
-                new TFClassType:class = TF2_GetPlayerClass(i);
-                g_hiddenSavedClass = class;
-                TF2_SetPlayerClass(i, TFClass_Spy, true, true);
-                respawn=true;
-            }
-            if (respawn) {
-                CreateTimer(0.1, Timer_Respawn, i);
-            }
-        } else {
-            new bool:respawn=false;
-            if (HTeam:GetClientTeam(i) != HTeam_Iris) {
-                ChangeClientTeam(i, _:HTeam_Iris);
-                respawn=true;
-            }
-            new TFClassType:class=TF2_GetPlayerClass(i);
-
-            if (i==g_lastHidden) {
-                TF2_SetPlayerClass(i, g_lastHiddenSavedClass, true, true); //restore last hidden's previous class, not *this* hiddens previous class
-                respawn=true;
-            } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
-                respawn=true;
-            }
-
-            if (respawn) {
-                CreateTimer(0.1, Timer_Respawn, i);
-            }
-            PrintToChat(i, "\x04[%s]\x01 \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_NAME, hidden);
-        }
-    }
-*/
     Client_RespawnAll();
     newHidden=true;
 }
 
 public OnMapStart() {
-    /* playing=true; */
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
