@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.7.5"
+#define PLUGIN_VERSION "2.8.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -51,7 +51,7 @@ enum HTeam {
     HTeam_Iris = TFTeam_Red
 }
 
-new hidden;
+new hidden=0;
 new hiddenHp;
 new hiddenHpMax;
 new bool:hiddenStick;
@@ -61,10 +61,9 @@ new Float:hiddenVisible;
 new Float:hiddenJump;
 new bool:hiddenAway;
 new Float:hiddenAwayTime;
-new TFClassType:g_hiddenSavedClass;
-new TFClassType:g_lastHiddenSavedClass;
-new bool:g_lastHiddenClassCorrected=true;
-new g_lastHidden = 0;
+new TFClassType:g_hiddenSavedClass=TFClass_Unknown;
+new TFClassType:g_lastHiddenSavedClass=TFClass_Unknown;
+new g_lastHidden=0;
 #if defined HIDDEN_BOO
     new Float:hiddenBoo;
 #endif
@@ -97,9 +96,11 @@ public OnPluginStart() {
 }
 
 public OnPluginEnd() {
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        RemoveHiddenVision(i);
+    if (activated) {
+        for (new i=1;i<=MaxClients;++i) {
+            if (!IsClientInGame(i)) continue;
+            RemoveHiddenVision(i);
+        }
     }
 }
 
@@ -157,22 +158,24 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 }
 
 public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (!activated) return; 
-    cvar_allowpyro = GetConVarBool(cvar);
-    if (cvar_allowpyro) {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
-    } else {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    if (activated) {
+        cvar_allowpyro = GetConVarBool(cvar);
+        if (cvar_allowpyro) {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
+        } else {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+        }
     }
 }
 
 public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (!activated)
-    cvar_allowengineer = GetConVarBool(cvar);
-    if (cvar_allowengineer) {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
-    } else {
-        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+    if (activated) {
+        cvar_allowengineer = GetConVarBool(cvar);
+        if (cvar_allowengineer) {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+        } else {
+            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
+        }
     }
 }
 
@@ -374,84 +377,78 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     new TFClassType:class = TF2_GetPlayerClass(client);
     
-    if (client==hidden) {
-        if (class!=TFClass_Spy) {
-            g_hiddenSavedClass = class;
-            TF2_SetPlayerClass(client, TFClass_Spy, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-        }
+    if ((client==hidden) && (class!=TFClass_Spy)) {
+        g_hiddenSavedClass = class;
+        TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         newHidden=true;
-    } else if (client==g_lastHidden) {
-        if (!g_lastHiddenClassCorrected) { //if we haven't set them to their pre-hidden class choice
-            TF2_SetPlayerClass(client, g_lastHiddenSavedClass, true, true);
-            g_lastHiddenClassCorrected = true; //this prevents blocking of class changes after their first post hidden spawn
-            CreateTimer(0.1, Timer_Respawn, client);
-        } else if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            //otherwise validate their new class choice as per usual
-            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-        }
-    } else {
-        if (class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer))  || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            TF2_SetPlayerClass(client, TFClass_Soldier, true, true);
-            CreateTimer(0.1, Timer_Respawn, client);
-            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-        }
+        CreateTimer(0.1, Timer_Respawn, client);
+    } else if ((client==g_lastHidden) && (client != hidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
+        TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
+        g_lastHiddenSavedClass=TFClass_Unknown;
+        g_lastHidden=0;
+        CreateTimer(0.1, Timer_Respawn, client);
+    } else if (client!=hidden && (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro)))) {
+        TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+        PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+        CreateTimer(0.1, Timer_Respawn, client);
     }
 }
 
 public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (victim!=hidden) return;
-   
-    new damage = GetEventInt(event, "damageamount");
-    hiddenHp-=damage;
-
-    if (hiddenHp<0) hiddenHp=0;
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        if (victim!=hidden) return;
     
-    if (hiddenHp>500) {
-        SetEntityHealth(hidden, 500);
-    } else if (hiddenHp>0) {
-        SetEntityHealth(hidden, hiddenHp);
+        new damage = GetEventInt(event, "damageamount");
+        hiddenHp-=damage;
+
+        if (hiddenHp<0) hiddenHp=0;
+    
+        if (hiddenHp>500) {
+            SetEntityHealth(hidden, 500);
+        } else if (hiddenHp>0) {
+            SetEntityHealth(hidden, hiddenHp);
+        }
     }
 }
 
 public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    if (activated) {
+        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+        new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-    if (!playing) return;   
+        if (!playing) return;   
  
-    if (victim==hidden) {
-        hiddenHp=0;
-        RemoveHiddenPowers(victim);
-        if (attacker!=hidden) {
-            forceNextHidden = GetClientUserId(attacker);
-        }
-        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
-    } else {
-        if (hidden!=0 && attacker==hidden) {
+        if (victim==hidden) {
+            hiddenHp=0;
+            RemoveHiddenPowers(victim);
+            if (attacker!=hidden) {
+                forceNextHidden = GetClientUserId(attacker);
+            }
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
+        } else {
+            if (hidden!=0 && attacker==hidden) {
 
-            // Remove firstblood crit
-            new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
-            SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
-               
-            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
-            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+                // Remove firstblood crit
+                new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
+                SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
+                
+                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
+                if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                    hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
+                }
+                hiddenHp+=HIDDEN_HP_PER_KILL;
+                if (hiddenHp>hiddenHpMax) {
+                    hiddenHp=hiddenHpMax;
+                }
+                PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+                CreateTimer(0.1, Timer_Dissolve, victim);
             }
-            hiddenHp+=HIDDEN_HP_PER_KILL;
-            if (hiddenHp>hiddenHpMax) {
-                hiddenHp=hiddenHpMax;
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim);
         }
+    }
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
-    if (!activated) return; 
     if (!CanPlay()) return Plugin_Continue;
     if (client==hidden) {
         new bool:changed=false;
@@ -573,58 +570,13 @@ public Action:Command_DisableHidden(client, args) {
 
 stock NewGame() {
     if (!CanPlay()) return;
-    if (hidden!=0) {
-        return;
-    }
-    /* playing=true; */
+    if (hidden!=0) return;
     SelectHidden();
-    if (hidden==0) return;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsClientPlaying(i)) continue;
-        if (IsFakeClient(i)) continue;
-        if (i==hidden) {
-            new bool:respawn=false;
-            if (HTeam:GetClientTeam(i) != HTeam_Hidden) {
-                ChangeClientTeam(i, _:HTeam_Hidden);
-                respawn=true;
-            }
-            if (TF2_GetPlayerClass(i)!=TFClass_Spy) {
-                new TFClassType:class = TF2_GetPlayerClass(i);
-                g_hiddenSavedClass = class;
-                TF2_SetPlayerClass(i, TFClass_Spy, true, true);
-                respawn=true;
-            }
-            if (respawn) {
-                CreateTimer(0.1, Timer_Respawn, i);
-            }
-        } else {
-            new bool:respawn=false;
-            if (HTeam:GetClientTeam(i) != HTeam_Iris) {
-                ChangeClientTeam(i, _:HTeam_Iris);
-                respawn=true;
-            }
-            new TFClassType:class=TF2_GetPlayerClass(i);
-
-            if (i==g_lastHidden) {
-                TF2_SetPlayerClass(i, g_lastHiddenSavedClass, true, true); //restore last hidden's previous class, not *this* hiddens previous class
-                respawn=true;
-            } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-                TF2_SetPlayerClass(i, TFClass_Soldier, true, true);
-                respawn=true;
-            }
-
-            if (respawn) {
-                CreateTimer(0.1, Timer_Respawn, i);
-            }
-            PrintToChat(i, "\x04[%s]\x01 \x03%N\x01 is \x03The Hidden\x01! Kill him before he kills you!", PLUGIN_NAME, hidden);
-        }
-    }
+    Client_RespawnAll();
     newHidden=true;
 }
 
 public OnMapStart() {
-    /* playing=true; */
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
@@ -701,10 +653,10 @@ stock MakeTeamWin(team) {
 }
 
 stock SelectHidden() {
-    g_lastHidden = hidden; //client id of last hidden
-    g_lastHiddenSavedClass = g_hiddenSavedClass; //copy last hidden's class from before their round as hidden
-    g_lastHiddenClassCorrected=false;
+    g_lastHidden=hidden; //Save this to restore class in player spawn
+    g_lastHiddenSavedClass=g_hiddenSavedClass;  //Save this to restore class in player_spawn
     hidden=0;
+    g_hiddenSavedClass=TFClass_Unknown;
     hiddenHpMax=HIDDEN_HP+((Client_GetCount(true, false)-1)*HIDDEN_HP_PER_PLAYER);
     hiddenHp=hiddenHpMax;
     hiddenVisible=0.0;
@@ -727,10 +679,10 @@ stock SelectHidden() {
     } else {
         hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
     }
-    
-    ChangeClientTeam(hidden, _:HTeam_Hidden);
+   
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
-    TF2_SetPlayerClass(hidden, TFClass_Spy, true, true);
+    ChangeClientTeam(hidden, _:HTeam_Hidden); 
+    TF2_SetPlayerClass(hidden, TFClass_Spy, false, true);
     
     if (!IsPlayerAlive(hidden)) {
         TF2_RespawnPlayer(hidden);
@@ -907,6 +859,12 @@ stock OverlayCommand(client, String:overlay[]) {
     if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
         SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
         ClientCommand(client, "r_screenoverlay %s", overlay);
+    }
+}
+
+stock Client_RespawnAll() {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS) {
+        CreateTimer(0.1, Timer_Respawn, client);
     }
 }
 
