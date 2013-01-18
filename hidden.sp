@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.8.2"
+#define PLUGIN_VERSION "2.8.2b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -86,13 +86,13 @@ new bool:cvar_allowengineer;
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
-    cv_enabled = CreateConVar("sm_hidden_enabled", "0", "Enables/disables the plugin.", _, true, 0.0, true, 1.0);
+    cv_enabled = CreateConVar("sm_hidden_enabled", "1", "Enables/disables the plugin.", _, true, 0.0, true, 1.0);
     cv_hidden_alltalk = CreateConVar("sm_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", _, true, 0.0, true, 1.0);
-    cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "0", "Set whether pyro is allowed on team IRIS", _, true, 0.0, true, 1.0);
-    cv_allowengineer = CreateConVar("sm_hidden_allowengineer", "0", "Set whether engineer is allowed on team IRIS", _, true, 0.0, true, 1.0);
+    cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "1", "Set whether pyro is allowed on team IRIS", _, true, 0.0, true, 1.0);
+    cv_allowengineer = CreateConVar("sm_hidden_allowengineer", "1", "Set whether engineer is allowed on team IRIS", _, true, 0.0, true, 1.0);
     cv_hidden_visible_damage = CreateConVar("sm_hidden_visible_damage", "0.5", "Amount of time (seconds) Hidden is visible when taking weapon damage.", _, true, 0.0, true, 3.0);
     cv_hidden_visible_jarate = CreateConVar("sm_hidden_visible_jarate", "1.0", "Amount of time (seconds) Hidden is visible when splashed with jarate, mad milk, or bonked.", _, true, 0.0, true, 3.0);
-    cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.0", "Amount of time (seconds) Hidden is visible when pouncing.", _, true, 0.0, true, 3.0);
+    cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.25", "Amount of time (seconds) Hidden is visible when pouncing.", _, true, 0.0, true, 3.0);
 
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_hidden_alltalk, cvhook_hidden_alltalk);
