@@ -103,11 +103,10 @@ public OnPluginStart() {
 }
 
 public OnPluginEnd() {
-    if (activated) {
-        for (new i=1;i<=MaxClients;++i) {
-            if (!IsClientInGame(i)) continue;
-            RemoveHiddenVision(i);
-        }
+    if (!activated) return;
+    for (new i=1;i<=MaxClients;++i) {
+        if (!IsClientInGame(i)) continue;
+        RemoveHiddenVision(i);
     }
 }
 
@@ -165,6 +164,7 @@ public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[])
 }
 
 public cvhook_hidden_alltalk(Handle:cvar, const String:oldVal[], const String:newVal[]) {
+    if (!activated) return;
     if (GetConVarBool(cvar)) {
         ServerCommand("sv_alltalk 1");
         ServerCommand("mp_show_voice_icons 0");
@@ -175,24 +175,22 @@ public cvhook_hidden_alltalk(Handle:cvar, const String:oldVal[], const String:ne
 }
 
 public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (activated) {
-        new bool:cvar_allowpyro = GetConVarBool(cvar);
-        if (cvar_allowpyro) {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
-        } else {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
-        }
+    if (!activated) return;
+    new bool:cvar_allowpyro = GetConVarBool(cvar);
+    if (cvar_allowpyro) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
 public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
-    if (activated) {
-        new bool:cvar_allowengineer = GetConVarBool(cvar);
-        if (cvar_allowengineer) {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
-        } else {
-            PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
-        }
+    if (!activated) return;
+    new bool:cvar_allowengineer = GetConVarBool(cvar);
+    if (cvar_allowengineer) {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
+    } else {
+        PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is no longer allowed on team IRIS", PLUGIN_NAME);
     }
 }
 
@@ -416,60 +414,57 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
 }
 
 public Action:player_hurt(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-        if (victim!=hidden) return;
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    if (victim!=hidden) return;
     
-        new damage = GetEventInt(event, "damageamount");
-        hiddenHp-=damage;
+    new damage = GetEventInt(event, "damageamount");
+    hiddenHp-=damage;
 
-        if (hiddenHp<0) hiddenHp=0;
-    
-        if (hiddenHp>500) {
-            SetEntityHealth(hidden, 500);
-        } else if (hiddenHp>0) {
-            SetEntityHealth(hidden, hiddenHp);
-        }
+    if (hiddenHp<0) hiddenHp=0;
+   
+    if (hiddenHp>500) {
+        SetEntityHealth(hidden, 500);
+    } else if (hiddenHp>0) {
+        SetEntityHealth(hidden, hiddenHp);
     }
 }
 
 public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast) {
-    if (activated) {
-        new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-        new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+    new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+    new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-        if (!playing) return;   
+    if (!playing) return;   
  
-        if (victim==hidden) {
-            hiddenHp=0;
-            RemoveHiddenPowers(victim);
-            if (attacker!=hidden) {
-                forceNextHidden = GetClientUserId(attacker);
-            }
-            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
-        } else {
-            if (hidden!=0 && attacker==hidden) {
+    if (victim==hidden) {
+        hiddenHp=0;
+        RemoveHiddenPowers(victim);
+        if (attacker!=hidden) {
+            forceNextHidden = GetClientUserId(attacker);
+        }
+        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
+    } else {
+        if (hidden!=0 && attacker==hidden) {
 
-                // Remove firstblood crit
-                new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
-                SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
+            // Remove firstblood crit
+            new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
+            SetEntProp(attacker, Prop_Send, "m_nPlayerCond", attacker_cond & ~PLAYER_FIRSTBLOOD);
                 
-                hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
-                if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
-                    hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
-                }
-                hiddenHp+=HIDDEN_HP_PER_KILL;
-                if (hiddenHp>hiddenHpMax) {
-                    hiddenHp=hiddenHpMax;
-                }
-                PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-                CreateTimer(0.1, Timer_Dissolve, victim);
+            hiddenInvisibility+=HIDDEN_INVISIBILITY_TIME*0.35;
+            if (hiddenInvisibility>HIDDEN_INVISIBILITY_TIME) {
+                hiddenInvisibility=HIDDEN_INVISIBILITY_TIME;
             }
+            hiddenHp+=HIDDEN_HP_PER_KILL;
+            if (hiddenHp>hiddenHpMax) {
+                hiddenHp=hiddenHpMax;
+            }
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
+            CreateTimer(0.1, Timer_Dissolve, victim);
         }
     }
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon) {
+    if (!activated) return Plugin_Continue;
     if (!CanPlay()) return Plugin_Continue;
     if (client==hidden) {
         new bool:changed=false;
@@ -623,8 +618,7 @@ stock bool:IsArenaMap() {
 }
 
 public OnClientDisconnect(client) {
-    if (client==hidden)
-        ResetHidden();
+    if (client==hidden) ResetHidden();
 }
 
 stock Dissolve(client, type) {
