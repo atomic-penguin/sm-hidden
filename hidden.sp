@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.8.2b"
+#define PLUGIN_VERSION "2.9.1b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -79,9 +79,7 @@ new Handle:cv_hidden_visible_damage; //Internal for sm_hidden_visible_damage
 new Handle:cv_hidden_visible_jarate; //Internal for sm_hidden_visible_jarate
 new Handle:cv_hidden_visible_pounce; //Internal for sm_hidden_visible_pounce
 new Handle:cv_allowpyro;
-new bool:cvar_allowpyro;
 new Handle:cv_allowengineer;
-new bool:cvar_allowengineer;
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
@@ -178,7 +176,7 @@ public cvhook_hidden_alltalk(Handle:cvar, const String:oldVal[], const String:ne
 
 public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[]) {
     if (activated) {
-        cvar_allowpyro = GetConVarBool(cvar);
+        new bool:cvar_allowpyro = GetConVarBool(cvar);
         if (cvar_allowpyro) {
             PrintToChatAll("\x04[%s]\x01 Class: \x03Pyro\x01 is now allowed on team IRIS", PLUGIN_NAME);
         } else {
@@ -189,7 +187,7 @@ public cvhook_allowpyro(Handle:cvar, const String:oldVal[], const String:newVal[
 
 public cvhook_allowengineer(Handle:cvar, const String:oldVal[], const String:newVal[]) {
     if (activated) {
-        cvar_allowengineer = GetConVarBool(cvar);
+        new bool:cvar_allowengineer = GetConVarBool(cvar);
         if (cvar_allowengineer) {
             PrintToChatAll("\x04[%s]\x01 Class: \x03Engineer\x01 is now allowed on team IRIS", PLUGIN_NAME);
         } else {
@@ -397,6 +395,8 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
     new TFClassType:class = TF2_GetPlayerClass(client);
+    new bool:cvar_allowpyro = GetConVarBool(cv_allowpyro);
+    new bool:cvar_allowengineer = GetConVarBool(cv_allowengineer);
     
     if ((client==hidden) && (class!=TFClass_Spy)) {
         g_hiddenSavedClass = class;
