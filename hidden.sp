@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.9.1b"
+#define PLUGIN_VERSION "2.9.0b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -397,19 +397,20 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new bool:cvar_allowengineer = GetConVarBool(cv_allowengineer);
     
     if ((client==hidden) && (class!=TFClass_Spy)) {
-        g_hiddenSavedClass = class;
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         newHidden=true;
         CreateTimer(0.1, Timer_Respawn, client);
-    } else if ((client==g_lastHidden) && (client != hidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
-        TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
-        g_lastHiddenSavedClass=TFClass_Unknown;
-        g_lastHidden=0;
-        CreateTimer(0.1, Timer_Respawn, client);
-    } else if (client!=hidden && (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro)))) {
-        TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-        PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
-        CreateTimer(0.1, Timer_Respawn, client);
+    } else if (client!=hidden) {
+        if ((client==g_lastHidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
+            TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
+            g_lastHiddenSavedClass=TFClass_Unknown;
+            g_lastHidden=0;
+            CreateTimer(0.1, Timer_Respawn, client);
+        } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
+            CreateTimer(0.1, Timer_Respawn, client);
+        }
     }
 }
 
@@ -440,8 +441,8 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
         RemoveHiddenPowers(victim);
         if (attacker!=hidden) {
             forceNextHidden = GetClientUserId(attacker);
+            PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker); 
         }
-        PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker);
     } else {
         if (hidden!=0 && attacker==hidden) {
 
