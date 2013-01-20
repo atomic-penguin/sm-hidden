@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.9.0b"
+#define PLUGIN_VERSION "2.9.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -69,7 +69,7 @@ new g_lastHidden=0;
 #endif
 new bool:newHidden;
 new bool:playing = false; 
-new bool:activated; // whether plugin is activated
+new bool:activated = false; // whether plugin is activated
 new forceNextHidden = 0;
 new Handle:t_disableCps;
 new Handle:t_tick;
@@ -84,13 +84,13 @@ new Handle:cv_allowengineer;
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
-    cv_enabled = CreateConVar("sm_hidden_enabled", "1", "Enables/disables the plugin.", _, true, 0.0, true, 1.0);
-    cv_hidden_alltalk = CreateConVar("sm_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", _, true, 0.0, true, 1.0);
-    cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "1", "Set whether pyro is allowed on team IRIS", _, true, 0.0, true, 1.0);
-    cv_allowengineer = CreateConVar("sm_hidden_allowengineer", "1", "Set whether engineer is allowed on team IRIS", _, true, 0.0, true, 1.0);
-    cv_hidden_visible_damage = CreateConVar("sm_hidden_visible_damage", "0.5", "Amount of time (seconds) Hidden is visible when taking weapon damage.", _, true, 0.0, true, 3.0);
-    cv_hidden_visible_jarate = CreateConVar("sm_hidden_visible_jarate", "1.0", "Amount of time (seconds) Hidden is visible when splashed with jarate, mad milk, or bonked.", _, true, 0.0, true, 3.0);
-    cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.25", "Amount of time (seconds) Hidden is visible when pouncing.", _, true, 0.0, true, 3.0);
+    cv_enabled = CreateConVar("sm_hidden_enabled", "1", "Enables/disables the plugin.", 0, true, 0.0, true, 1.0);
+    cv_hidden_alltalk = CreateConVar("sm_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", 0, true, 0.0, true, 1.0);
+    cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "1", "Set whether pyro is allowed on team IRIS", 0, true, 0.0, true, 1.0);
+    cv_allowengineer = CreateConVar("sm_hidden_allowengineer", "1", "Set whether engineer is allowed on team IRIS", 0, true, 0.0, true, 1.0);
+    cv_hidden_visible_damage = CreateConVar("sm_hidden_visible_damage", "0.5", "Amount of time (seconds) Hidden is visible when taking weapon damage.", 0, true, 0.0, true, 3.0);
+    cv_hidden_visible_jarate = CreateConVar("sm_hidden_visible_jarate", "1.0", "Amount of time (seconds) Hidden is visible when splashed with jarate, mad milk, or bonked.", 0, true, 0.0, true, 3.0);
+    cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.25", "Amount of time (seconds) Hidden is visible when pouncing.", 0, true, 0.0, true, 3.0);
 
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_hidden_alltalk, cvhook_hidden_alltalk);
@@ -99,7 +99,11 @@ public OnPluginStart() {
    
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("sm_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 1");
-    RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0"); 
+    RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0");
+
+    if (IsArenaMap() && cv_enabled) {
+        ActivatePlugin();
+    }
 }
 
 public OnPluginEnd() {
@@ -588,12 +592,14 @@ public Action:Command_DisableHidden(client, args) {
 stock NewGame() {
     if (!CanPlay()) return;
     if (hidden!=0) return;
+    //playing=true;
     SelectHidden();
     Client_RespawnAll();
     newHidden=true;
 }
 
 public OnMapStart() {
+    //playing=true;
     PrecacheSound(HIDDEN_BOO_FILE, true);
 }
 
