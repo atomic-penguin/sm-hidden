@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.9.1"
+#define PLUGIN_VERSION "2.9.2"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -138,7 +138,7 @@ stock ActivatePlugin() {
     Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
     Steam_SetGameDescription(gameDesc);
 
-    ServerCommand("tf_arena_override_teamsize 17");
+    ServerCommand("tf_arena_override_team_size 17");
 }
 
 stock DeactivatePlugin() {
@@ -159,6 +159,8 @@ stock DeactivatePlugin() {
     UnhookEvent("player_death", player_death);
 
     RemoveCommandListener(Cmd_build, "build");
+
+    ServerCommand("tf_arena_override_team_size 0");
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
