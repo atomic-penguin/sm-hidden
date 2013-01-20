@@ -12,7 +12,7 @@
  */
 
 #define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.9.0"
+#define PLUGIN_VERSION "2.9.1"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -137,6 +137,8 @@ stock ActivatePlugin() {
     decl String:gameDesc[64];
     Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
     Steam_SetGameDescription(gameDesc);
+
+    ServerCommand("tf_arena_override_teamsize 17");
 }
 
 stock DeactivatePlugin() {
