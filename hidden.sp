@@ -101,7 +101,7 @@ public OnPluginStart() {
     RegAdminCmd("sm_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 1");
     RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0");
 
-    if (IsArenaMap() && cv_enabled) {
+    if (IsArenaMap() && GetConVarBool(cv_enabled)) {
         ActivatePlugin();
     }
 }
