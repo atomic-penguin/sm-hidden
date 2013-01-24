@@ -1,124 +1,126 @@
-####TF2 Hidden - SourceMod Plugin for Team Fortress 2
+# [TF2] Hidden - SourceMod Plugin 
 
-TF2 Hidden is a 'Hidden:Source-esque' SourceMod plugin for [Team Fortress 2](http://www.teamfortress.com/).
+TF2 Hidden is a Hidden:Source-like SourceMod plugin for [Team Fortress 2](http://www.teamfortress.com/).
 
-Get Plugin [.smx](),
-Get Source [.zip](https://github.com/atomic-penguin/sm-hidden/tags),
-Requires SteamTools [SteamTools](http://forums.alliedmods.net/showthread.php?t=129763)
+* [Allied Mods Forum Post]()
+* Get [Plugin](),
+* Get [Source](https://github.com/atomic-penguin/sm-hidden/tags),
 
-[Allied Mods Forum Post]()
+## Requirements
 
-Original code by [Matheus28](http://forums.alliedmods.net/showthread.php?t=143577),
-adapted and improved by [atomic-penguin](https://github.com/atomic-penguin)
-([steam](http://steamcommunity.com/id/atomic-penguin/))
-and [daniel-murray](https://github.com/daniel-murray)
-([steam](http://steamcommunity.com/id/smileydan2/))
-based on suggestions in [this](http://forums.alliedmods.net/showpost.php?p=1770153&postcount=133)
-post and feedback from testing sessions with members of
+Plugin requires [SteamTools](http://forums.alliedmods.net/showthread.php?t=129763) extension to load.
+Requires [smlib](https://github.com/bcserv/smlib) stock includes when building the plugin from source.
+
+Original code by [Matheus28](http://forums.alliedmods.net/showthread.php?t=143577).  Adapted and improved by [atomic-penguin](https://github.com/atomic-penguin)
+([steam](http://steamcommunity.com/id/atomic-penguin/)) and [daniel-murray](https://github.com/daniel-murray) ([steam](http://steamcommunity.com/id/smileydan2/))
+based on suggestions in [this](http://forums.alliedmods.net/showpost.php?p=1770153&postcount=133) post, and feedback from testing sessions with members of
 [atomic's steam group](http://steamcommunity.com/groups/PenguinsPub).
 
-####Gameplay
+## Gameplay
 
-Each round one player is The Hidden. Their goal is to kill all of players on the other team.
+Each round one player is the Hidden. Their goal is to kill all of players on the other team.
 The Hidden plays as the spy with some supplementary abilities and attributes:
 
- * Extra long cloak time
- * Increased movement speed
- * Ignores some effects, such as fire after-burn, jarate-cloak-color, bleed effects and a few others
- * Can attack from cloak
- * `attack2` allows The Hidden to perform a super jump or pounce and to stick to walls
- * `reload` allows The Hidden to scare nearby enemies
+* Increased health points.
+  - Additional health granted per player.
+* Increased movement speed.
+* Increased jump heighth and distance.
+* Reduced effectiveness of certain weapon effects.
+  - e.g. fire after-burn, jarate splash, and bleed effects.
+* Hidden is almost always cloaked.  Except when:
+  - attacking
+  - pouncing
+  - taking damage
 
-So it looks pretty hopeless for team Iris right? Well not quite, with a hefty dose of teamwork (and pyros)
+### Hidden controls and gameplay
+
+The Hidden has only a couple minutes of time to kill everyone on team Iris.
+The Hidden's arsenal includes two special mechanisms, to make him
+especially dangerous to players on team Iris.
+
+* `attack2` allows the Hidden to perform a super jump/pounce and stick briefly to walls.
+* `reload` allows the Hidden to stun nearby enemies.
+
+### Iris teamplay
+
+When playing on the Iris team, you play just as you would any other TF2 mode.  A few
+things have been changed in this plugin to make it balanced and fair for anyone to play the Hidden.
+
+* Spies have been disabled.
+* Sentry guns have been blocked.
+* Engineers and Pyros can optionally be disabled.
+
+So it looks pretty hopeless for team Iris right?  Well not quite, with a hefty dose of teamwork
 you can bring The Hidden down... maybe.
 
-Words not cutting it for you? See a full life [here](https://www.youtube.com/watch?v=H8WquUK2kLI).
+See a full life of Iris team gameplay [here](https://www.youtube.com/watch?v=H8WquUK2kLI).
 
-####Tips
+### Other tips
 
- * Listen! Do you hear somet...
- * Health is hard to come by on Arena maps, think about items that may help you here!
- * Unless you're a total badass, it's probably a good idea to stick with your team.
- * Turn on payload objective glow, if you haven't already. You can see the outline effects
-   [here](https://www.youtube.com/watch?v=nJN_dUMeeaQ).
+* Listen! Do you hear somet...
+* Health is hard to come by on Arena maps, think about items that may help you here!
+* Unless you're a total badass, it's probably a good idea to stick with your team.
+* Turn on payload objective glow, if you haven't already. You can see the outline effects
+  [here](https://www.youtube.com/watch?v=nJN_dUMeeaQ).
 
-####FAQ
+## FAQ
 
-How is the next Hidden determined?
+* How is the next Hidden determined?
+  - If an Iris player kills the Hidden, then they will be rewarded by getting to play the Hidden next.
+  - If no Iris player kills the Hidden, then a random player will be selected to play the Hidden next.
+  - A server admin, may force the next Hidden with the `sm_nexthidden` command, instead of random selection.
 
- * In one of three ways. If the admin command `sm_nexthidden` has been successfully issued
-   the target player will be the next Hidden.  If a player on team Iris kills The Hidden, they
-   will be the next Hidden. Otherwise it is random.
+* What maps can we play this gamemode on?
+  - The plugin will only run on Arena mode maps.  Because there is only one life per round in arena,
+    this suits the nature of this paricular plugin and game mode.
 
-What maps can we play this gamemode on?
+* Where can I find more arena maps
+  - [Here](https://gist.github.com/4605750) is a list of custom arena maps we have playtested
+    with this particular plugin.  The plugin works small to medium size arena maps.  Larger
+    arena maps are not particularly fun with fewer people.
 
- * The plugin will only run on Arena mode maps.
-   The reason for this is to simplify some aspects of the plugin by making assumptions
-   based on Arena mode. Arena maps work great for this gamemode.
-   You can find a list of custom arena maps [here](https://gist.github.com/4605750). 
+* Why can I not use sentries?
+  - During testing we found sentries to be too powerful.  By allowing the Engineer class,
+   but restricting him to support buildings let us replicate the support class (can refill ammo/health)
+   from Hidden:Source.
+   
 
-Why can't I use sentries?
+## Admin Commands
 
- * During testing we found sentries to be too powerful.
-   We also found that allowing the Engineer class, but restricting him to support buildings only,
-   allowed us to replicate the support class type in Hidden:Source (which can refill team ammo
-   supplies). 
+* `sm_nexthidden <client-name>`
+ - Forces a player to be the next Hidden
 
-####Admin Commands
+* `sm_hidden_enable`
+  - Enable the plugin
 
-`sm_nexthidden <client-name>`
+* `sm_hidden_disable`
+  - Disable the plugin
 
- * Forces a player to be the next Hidden
+## ConVars
 
-`sm_hidden_enable`
+* `sm_hidden_enabled`
+  - def = 1, Enables/disables the plugin
 
- * Enable the plugin
+* `sm_hidden_alltalk`
+  - def = 1, Turn alltalk and voice icons off
 
-`sm_hidden_diable`
+* `sm_hidden_allowpyro`
+  - def = 1, Set whether pyro is allowed on team Iris
 
- * Disable the plugin
+* `sm_hidden_allowengineer`
+  - def = 1, Set Whether engineer is allowed on team Iris
 
-####ConVars
+* `sm_hidden_visible_damage`
+  - def = 0.5, Time hidden is visible for (seconds) on taking weapon damage
 
-`sm_hidden_enabled`
+* `sm_hidden_visible_jarate`
+  - def = 1, Time hidden is visible for (seconds) when splashed or bonked
 
- * def = 1, Enables/disables the plugin
+* `sm_hidden_visible_pounce`
+  - def = 0.25, Time hidden is visible for (seconds) when pouncing
 
-`sm_hidden_alltalk`
+## How Do I Suggest a Feature or Submit a Bug?
 
- * def = 1, Turn alltalk and voice icons off
-
-`sm_hidden_allowpyro`
-
- * def = 1, Set whether pyro is allowed on team Iris
-
-`sm_hidden_allowengineer`
-
- * def = 1, Set Whether engineer is allowed on team Iris
-
-`sm_hidden_visible_damage`
-
- * def = 0.5, Time hidden is visible for (seconds) on taking weapon damage
-
-`sm_hidden_visible_jarate`
-
- * def = 1, Time hidden is visible for (seconds) when splashed or bonked
-
-`sm_hidden_visible_pounce`
-
- * def = 0.25, Time hidden is visible for (seconds) when pouncing
-
-####List of Servers known to be Running This Plugin
-
-Reddit Unnofficial Gaming Community Penguin's Pub
-
- * [connect](steam://connect/206.212.61.22:27017) or `connect 206.212.61.22:27017` at TF2's console
-
-(we'd love to add your sever here, let us know!)
-
-####How Do I Suggest a Feature or Submit a Bug?
-
-We'd prefer that you use the GitHub Issue Tracking system found
-[here](https://github.com/atomic-penguin/sm-hidden/issues?state=open). Who knows, your issue might already be there!
-However a post on the Allied Mods forum, an email or steam message to either of us or that you drop by atomic's server and
-let us know there are all fine too.
+Either use the GitHub Issue Tracking system found
+[here](https://github.com/atomic-penguin/sm-hidden/issues?state=open), or
+post a comment on the [plugin thread]().
