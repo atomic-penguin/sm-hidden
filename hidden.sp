@@ -11,8 +11,8 @@
  * http://forums.alliedmods.net/showthread.php?t=143577
  */
 
-#define PLUGIN_AUTHOR "atomic-penguin"
-#define PLUGIN_VERSION "2.9.2"
+#define PLUGIN_AUTHOR "atomic-penguin, smiley_dan"
+#define PLUGIN_VERSION "2.9.4"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -100,10 +100,6 @@ public OnPluginStart() {
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("sm_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 1");
     RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0");
-
-    if (IsArenaMap() && GetConVarBool(cv_enabled)) {
-        ActivatePlugin();
-    }
 }
 
 public OnPluginEnd() {
@@ -114,8 +110,16 @@ public OnPluginEnd() {
     }
 }
 
+public OnConfigsExecuted() {
+    new bool:cvar_enabled=GetConVarBool(cv_enabled);
+    if (cvar_enabled && IsArenaMap()) {
+        SetGameDescription();
+    } 
+}
+
 stock ActivatePlugin() {
-    if (activated) return;
+    new bool:cvar_enabled=GetConVarBool(cv_enabled);
+    if (cvar_enabled && activated) return;
     activated=true;
     
     t_tick = CreateTimer(TICK_INTERVAL, Timer_Tick, _, TIMER_REPEAT);
@@ -132,17 +136,14 @@ stock ActivatePlugin() {
     HookEvent("player_death", player_death);
 
     AddCommandListener(Cmd_build, "build");
-
-    PrintToChatAll("[%s] Enabled!", PLUGIN_NAME);
-    decl String:gameDesc[64];
-    Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
-    Steam_SetGameDescription(gameDesc);
-
     ServerCommand("tf_arena_override_team_size 17");
+
+    SetGameDescription();
 }
 
 stock DeactivatePlugin() {
-    if (!activated) return;
+    new bool:cvar_enabled=GetConVarBool(cv_enabled);
+    if (!cvar_enabled && !activated) return;
     activated=false;
     
     KillTimer(t_tick);
@@ -159,8 +160,9 @@ stock DeactivatePlugin() {
     UnhookEvent("player_death", player_death);
 
     RemoveCommandListener(Cmd_build, "build");
-
     ServerCommand("tf_arena_override_team_size 0");
+
+    SetGameDescription();
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
@@ -930,3 +932,14 @@ stock bool:HiddenBoo() {
     return true;
 }
 #endif
+
+stock SetGameDescription() {
+    new bool:cvar_enabled = GetConVarBool(cv_enabled);
+    decl String:gameDesc[64];
+    if (cvar_enabled && IsArenaMap()) {
+        Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
+    } else {
+        gameDesc = "Team Fortress";
+    }
+    Steam_SetGameDescription(gameDesc);
+}
