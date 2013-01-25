@@ -189,7 +189,10 @@ stock ActivatePlugin() {
     HookEvent("player_death", player_death);
 
     AddCommandListener(Cmd_build, "build");
-    ServerCommand("tf_arena_override_team_size 17");
+    SetConVarInt(FindConVar("tf_arena_use_queue"), 1);
+    SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 17);
+    SetConVarInt(FindConVar("tf_arena_first_blood"), 0);
+    SetConVarInt(FindConVar("mp_forcecamera"), 0);
 }
 
 stock DeactivatePlugin() {
@@ -211,7 +214,10 @@ stock DeactivatePlugin() {
     UnhookEvent("player_death", player_death);
 
     RemoveCommandListener(Cmd_build, "build");
-    ServerCommand("tf_arena_override_team_size 0");
+    SetConVarInt(FindConVar("tf_arena_use_queue"), 1);
+    SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 0);
+    SetConVarInt(FindConVar("tf_arena_first_blood"), 1);
+    SetConVarInt(FindConVar("mp_forcecamera"), 1);
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
@@ -910,6 +916,7 @@ stock GiveHiddenPowers(i) {
     SetEntProp(knife, Prop_Send, "m_iEntityLevel", 100);
     SetEntProp(knife, Prop_Send, "m_iEntityQuality", 10);
     SetEntProp(knife, Prop_Send, "m_bInitialized", 1);
+
     // Also, I hate extensions :p
     EquipPlayerWeapon(i, knife);
     GiveHiddenVision(i);
