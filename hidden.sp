@@ -1,3 +1,21 @@
+/* [TF2] SM Hidden
+ * Copyright (C) 2010, Matheus28, http://forums.alliedmods.net/showthread.php?t=143577
+ * Copyright (C) 2013, Eric G. Wolfe and Daniel Murray
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma semicolon 1
 #include <sourcemod>
 #include <sdktools>
@@ -7,11 +25,6 @@
 #tryinclude <steamtools>
 #define REQUIRE_EXTENSIONS
 #include <smlib>
-
-/*
- * Original code by Matheus28,
- * http://forums.alliedmods.net/showthread.php?t=143577
- */
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
 #define PLUGIN_VERSION "2.9.9"
