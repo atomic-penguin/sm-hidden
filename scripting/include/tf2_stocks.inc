@@ -1,0 +1,1 @@
+../../../sourcemod/sourcemod-central/plugins/include/tf2_stocks.inc
