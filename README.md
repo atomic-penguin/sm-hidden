@@ -8,13 +8,22 @@ TF2 Hidden is a Hidden:Source-like SourceMod plugin for [Team Fortress 2](http:/
 
 ## Requirements
 
-Plugin requires [SteamTools](http://forums.alliedmods.net/showthread.php?t=129763) extension to load.
+Plugin optionally requires [SteamTools](http://forums.alliedmods.net/showthread.php?t=129763) extension to change server game description.
 Requires [smlib](https://github.com/bcserv/smlib) stock includes when building the plugin from source.
 
 Original code by [Matheus28](http://forums.alliedmods.net/showthread.php?t=143577).  Adapted and improved by [atomic-penguin](https://github.com/atomic-penguin)
 ([steam](http://steamcommunity.com/id/atomic-penguin/)) and [daniel-murray](https://github.com/daniel-murray) ([steam](http://steamcommunity.com/id/smileydan2/))
 based on suggestions in [this](http://forums.alliedmods.net/showpost.php?p=1770153&postcount=133) post, and feedback from testing sessions with members of
 [atomic's steam group](http://steamcommunity.com/groups/PenguinsPub).
+
+### Installation/Usage
+
+Simply drop the smx, in your Sourcemod plugins folder, and restart your server to load the plugin.
+Once the plugin is loaded, switch to an arena map.
+
+**WARNING**:  Plugins which manage AFK players, scramble, and autobalance plugins may interfere with
+player queueing and spawning in this gamemode.  These type of plugins have not been thoroughly tested
+with this plugin and it woulde be safest to disable these.
 
 ## Gameplay
 
