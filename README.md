@@ -2,8 +2,8 @@
 
 TF2 Hidden is a Hidden:Source-like SourceMod plugin for [Team Fortress 2](http://www.teamfortress.com/).
 
-* [Allied Mods Forum Post]()
-* Get [Plugin](),
+* [Allied Mods Forum Post](https://forums.alliedmods.net/showthread.php?p=1880477#post1880477)
+* Get [Plugin](https://forums.alliedmods.net/attachment.php?attachmentid=115025&d=1359143203),
 * Get [Source](https://github.com/atomic-penguin/sm-hidden),
 
 ## Requirements
