@@ -1,1 +1,0 @@
-../../../sourcemod/sourcemod-central/plugins/include/sdktools.inc
