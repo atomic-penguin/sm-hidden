@@ -3,7 +3,9 @@
 #include <sdktools>
 #include <tf2>
 #include <tf2_stocks>
-#include <steamtools>
+#undef REQUIRE_EXTENSIONS
+#tryinclude <steamtools>
+#define REQUIRE_EXTENSIONS
 #include <smlib>
 
 /*
@@ -11,8 +13,8 @@
  * http://forums.alliedmods.net/showthread.php?t=143577
  */
 
-#define PLUGIN_AUTHOR "atomic-penguin, smiley_dan"
-#define PLUGIN_VERSION "2.9.4"
+#define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
+#define PLUGIN_VERSION "2.9.9"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -81,6 +83,17 @@ new Handle:cv_hidden_visible_pounce; //Internal for sm_hidden_visible_pounce
 new Handle:cv_allowpyro;
 new Handle:cv_allowengineer;
 
+#if defined _steamtools_included
+new bool:steamtools = false;
+#endif
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max) {
+#if defined _steamtools_included
+    MarkNativeAsOptional("Steam_SetGameDescription");
+#endif
+    return APLRes_Success;
+}
+
 public OnPluginStart() {
     LoadTranslations("common.phrases");
     
@@ -92,6 +105,9 @@ public OnPluginStart() {
     cv_hidden_visible_jarate = CreateConVar("sm_hidden_visible_jarate", "1.0", "Amount of time (seconds) Hidden is visible when splashed with jarate, mad milk, or bonked.", 0, true, 0.0, true, 3.0);
     cv_hidden_visible_pounce = CreateConVar("sm_hidden_visible_pounce", "0.25", "Amount of time (seconds) Hidden is visible when pouncing.", 0, true, 0.0, true, 3.0);
 
+    // Auto-create the config file
+    AutoExecConfig(true, "plugin.hidden");
+
     HookConVarChange(cv_enabled, cvhook_enabled);
     HookConVarChange(cv_hidden_alltalk, cvhook_hidden_alltalk);
     HookConVarChange(cv_allowpyro, cvhook_allowpyro);
@@ -100,6 +116,10 @@ public OnPluginStart() {
     RegAdminCmd("sm_nexthidden", Cmd_NextHidden, ADMFLAG_CHEATS, "Forces the next hidden to be certain player");
     RegAdminCmd("sm_hidden_enable", Command_EnableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 1");
     RegAdminCmd("sm_hidden_disable", Command_DisableHidden, ADMFLAG_CONVARS, "Changes the sm_hidden_enabled cvar to 0");
+
+#if defined _steamtools_included
+    steamtools = LibraryExists("SteamTools");
+#endif
 }
 
 public OnPluginEnd() {
@@ -110,11 +130,44 @@ public OnPluginEnd() {
     }
 }
 
+public OnLibraryAdded(const String:name[]) {
+#if defined _steamtools_included
+    if (strcmp(name, "SteamTools", false) == 0) {
+        steamtools = true;
+    }
+#endif
+}
+
+public OnLibraryRemoved(const String:name[]) {
+#if defined _steamtools_included
+    if (strcmp(name, "SteamTools", false) == 0) {
+         steamtools = false;
+    }
+#endif
+}
+
 public OnConfigsExecuted() {
     new bool:cvar_enabled=GetConVarBool(cv_enabled);
     if (cvar_enabled && IsArenaMap()) {
-        SetGameDescription();
+        ActivatePlugin();
+        if (steamtools) SetGameDescription();
+    } else if (!cvar_enabled || !IsArenaMap()) {
+        if (steamtools) SetGameDescription();
+        DeactivatePlugin();
     } 
+}
+
+public OnMapStart() {
+    //playing=true;
+    PrecacheSound(HIDDEN_BOO_FILE, true);
+    new bool:cvar_enabled=GetConVarBool(cv_enabled);
+    if (cvar_enabled && IsArenaMap()) {
+        ActivatePlugin();
+        if (steamtools) SetGameDescription();
+    } else if (!cvar_enabled || !IsArenaMap()) {
+        if (steamtools) SetGameDescription();
+        DeactivatePlugin();
+    }
 }
 
 stock ActivatePlugin() {
@@ -137,8 +190,6 @@ stock ActivatePlugin() {
 
     AddCommandListener(Cmd_build, "build");
     ServerCommand("tf_arena_override_team_size 17");
-
-    SetGameDescription();
 }
 
 stock DeactivatePlugin() {
@@ -161,8 +212,6 @@ stock DeactivatePlugin() {
 
     RemoveCommandListener(Cmd_build, "build");
     ServerCommand("tf_arena_override_team_size 0");
-
-    SetGameDescription();
 }
 
 public cvhook_enabled(Handle:cvar, const String:oldVal[], const String:newVal[]) {
@@ -604,11 +653,6 @@ stock NewGame() {
     newHidden=true;
 }
 
-public OnMapStart() {
-    //playing=true;
-    PrecacheSound(HIDDEN_BOO_FILE, true);
-}
-
 stock DisableCps() {
     new i = -1;
     new CP = 0;
@@ -717,7 +761,7 @@ stock SelectHidden() {
     }
     
     PrintToChat(hidden, "\x04[%s]\x01 You are \x03The Hidden\x01! Kill the IRIS Team!", PLUGIN_NAME);
-    PrintToChat(hidden, "\x04[%s]\x01 \x03%attack2% to use the super jump or stick to walls, Press %reload% to use your stun attack.\x01", PLUGIN_NAME);
+    PrintToChat(hidden, "\x04[%s]\x01 Press \x04attack2\x01 to use super jump or stick to walls; \x04reload\x01 to use your stun attack.", PLUGIN_NAME);
 
     return hidden;
 }
