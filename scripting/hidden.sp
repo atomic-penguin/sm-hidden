@@ -477,16 +477,19 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new bool:cvar_allowengineer = GetConVarBool(cv_allowengineer);
     
     if ((client==hidden) && (class!=TFClass_Spy)) {
+        ChangeClientTeam(client, _:HTeam_Hidden);
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         newHidden=true;
         CreateTimer(0.1, Timer_Respawn, client);
     } else if (client!=hidden) {
         if ((client==g_lastHidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
+            ChangeClientTeam(client, _:HTeam_Iris);
             TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
             g_lastHiddenSavedClass=TFClass_Unknown;
             g_lastHidden=0;
             CreateTimer(0.1, Timer_Respawn, client);
         } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            ChangeClientTeam(client, _:HTeam_Iris);
             TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
             PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             CreateTimer(0.1, Timer_Respawn, client);
