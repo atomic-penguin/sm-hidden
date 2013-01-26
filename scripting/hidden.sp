@@ -958,7 +958,7 @@ stock OverlayCommand(client, String:overlay[]) {
 }
 
 stock Client_RespawnAll() {
-    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS) {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS | CLIENTFILTER_NOSPECTATORS) {
         CreateTimer(0.1, Timer_Respawn, client);
     }
 }
