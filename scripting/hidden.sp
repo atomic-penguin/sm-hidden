@@ -202,7 +202,7 @@ stock ActivatePlugin() {
     HookEvent("player_death", player_death);
 
     AddCommandListener(Cmd_build, "build");
-    SetConVarInt(FindConVar("tf_arena_use_queue"), 1);
+    SetConVarInt(FindConVar("tf_arena_use_queue"), 0);
     SetConVarInt(FindConVar("tf_arena_override_team_size"), 17);
     SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 0);
     SetConVarInt(FindConVar("tf_arena_first_blood"), 0);
@@ -477,16 +477,19 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new bool:cvar_allowengineer = GetConVarBool(cv_allowengineer);
     
     if ((client==hidden) && (class!=TFClass_Spy)) {
+        ChangeClientTeam(client, _:HTeam_Hidden);
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         newHidden=true;
         CreateTimer(0.1, Timer_Respawn, client);
     } else if (client!=hidden) {
         if ((client==g_lastHidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
+            ChangeClientTeam(client, _:HTeam_Iris);
             TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
             g_lastHiddenSavedClass=TFClass_Unknown;
             g_lastHidden=0;
             CreateTimer(0.1, Timer_Respawn, client);
         } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
+            ChangeClientTeam(client, _:HTeam_Iris);
             TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
             PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             CreateTimer(0.1, Timer_Respawn, client);
@@ -958,7 +961,7 @@ stock OverlayCommand(client, String:overlay[]) {
 }
 
 stock Client_RespawnAll() {
-    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS) {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS | CLIENTFILTER_NOSPECTATORS) {
         CreateTimer(0.1, Timer_Respawn, client);
     }
 }
