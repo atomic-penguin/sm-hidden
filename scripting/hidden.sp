@@ -202,7 +202,7 @@ stock ActivatePlugin() {
     HookEvent("player_death", player_death);
 
     AddCommandListener(Cmd_build, "build");
-    SetConVarInt(FindConVar("tf_arena_use_queue"), 1);
+    SetConVarInt(FindConVar("tf_arena_use_queue"), 0);
     SetConVarInt(FindConVar("tf_arena_override_team_size"), 17);
     SetConVarInt(FindConVar("mp_teams_unbalance_limit"), 0);
     SetConVarInt(FindConVar("tf_arena_first_blood"), 0);
