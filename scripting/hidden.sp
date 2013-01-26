@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.9.9"
+#define PLUGIN_VERSION "2.10.1b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -467,6 +467,8 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 
     if (client != hidden && team==HTeam_Hidden) {
         ChangeClientTeam(client, _:HTeam_Iris);
+    } else if (team==HTeam_Iris) {
+        ChangeClientTeam(client, _:HTeam_Hidden);
     }
 }
 
@@ -773,7 +775,7 @@ stock SelectHidden() {
         hidden=forced;
         forceNextHidden=0;
     } else {
-        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
+        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS|CLIENTFILTER_NOOBSERVERS);
     }
    
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
@@ -961,7 +963,7 @@ stock OverlayCommand(client, String:overlay[]) {
 }
 
 stock Client_RespawnAll() {
-    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH | CLIENTFILTER_NOBOTS | CLIENTFILTER_NOSPECTATORS) {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOBOTS|CLIENTFILTER_NOSPECTATORS|CLIENTFILTER_NOOBSERVERS) {
         CreateTimer(0.1, Timer_Respawn, client);
     }
 }
