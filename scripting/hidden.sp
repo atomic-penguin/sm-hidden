@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.7b"
+#define PLUGIN_VERSION "2.10.7"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
