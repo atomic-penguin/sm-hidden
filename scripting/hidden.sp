@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.1b"
+#define PLUGIN_VERSION "2.10.2b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -211,7 +211,7 @@ stock ActivatePlugin() {
 
 stock DeactivatePlugin() {
     new bool:cvar_enabled=GetConVarBool(cv_enabled);
-    if (!cvar_enabled && !activated) return;
+    if (!cvar_enabled || !activated) return;
     activated=false;
     
     KillTimer(t_tick);
