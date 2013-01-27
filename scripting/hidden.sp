@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.5b"
+#define PLUGIN_VERSION "2.10.6b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -467,8 +467,6 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 
     if (client != hidden && team==HTeam_Hidden) {
         ChangeClientTeam(client, _:HTeam_Iris);
-    } else if (team==HTeam_Iris) {
-        ChangeClientTeam(client, _:HTeam_Hidden);
     }
 }
 
