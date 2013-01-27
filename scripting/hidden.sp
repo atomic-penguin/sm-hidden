@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.4"
+#define PLUGIN_VERSION "2.10.5b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -893,13 +893,10 @@ stock ShowHiddenHP(Float:duration) {
     
     new Float:perc=float(hiddenHp)/float(hiddenHpMax)*100.0;
     SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255);
-    
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (IsFakeClient(i)) continue;
-        if (i==hidden) continue;
-        ShowHudText(i, 0, "Hidden Health: %.1f%%", perc);
-    }
+
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOBOTS) {
+        ShowHudText(client, 0, "Hidden Health: %.1f%%", perc);
+    } 
     
     if (perc>60.0) {
         SetHudTextParams(-1.0, 0.3, duration, 0, 255, 0, 255);
