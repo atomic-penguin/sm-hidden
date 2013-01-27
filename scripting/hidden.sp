@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.7"
+#define PLUGIN_VERSION "2.11.0"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -38,7 +38,7 @@
 #define HIDDEN_HP_PER_PLAYER 50
 #define HIDDEN_HP_PER_KILL 75
 #define HIDDEN_INVISIBILITY_TIME 100.0
-#define HIDDEN_STAMINA_TIME 7.5
+#define HIDDEN_STAMINA_TIME 10.0 
 #define HIDDEN_JUMP_TIME 0.5
 #define HIDDEN_AWAY_TIME 15.0
 #define HIDDEN_BOO
@@ -137,9 +137,8 @@ public OnPluginStart() {
 
 public OnPluginEnd() {
     if (!activated) return;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        RemoveHiddenVision(i);
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAME) {
+        RemoveHiddenVision(client);
     }
 }
 
@@ -281,54 +280,51 @@ public OnGameFrame() {
     new Float:tickInterval = GetTickInterval();
     new Float:f_hiddenVisibleDamage = GetConVarFloat(cv_hidden_visible_damage);
     new Float:f_hiddenVisibleJarate = GetConVarFloat(cv_hidden_visible_jarate);
-    
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        
-        if (i==hidden && IsPlayerAlive(i)) {
-            if (GetClientHealth(i)>0) {
-                if (hiddenHp>500) {
-                    SetEntityHealth(i, 500);
+
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_ALIVE|CLIENTFILTER_NOBOTS|CLIENTFILTER_NOSPECTATORS) {
+        if (client==hidden) {
+            if (GetClientHealth(client)>0) {
+                if (hiddenHp>HIDDEN_HP) {
+                    SetEntityHealth(client, HIDDEN_HP);
                 } else {
-                    SetEntityHealth(i, hiddenHp);
+                    SetEntityHealth(client, hiddenHp);
                 }
             }
-            
-            SetEntDataFloat(i, FindSendPropInfo("CTFPlayer", "m_flMaxspeed"), 400.0, true);
-            
+
+            SetEntDataFloat(hidden, FindSendPropInfo("CTFPlayer", "m_flMaxspeed"), 400.0, true);
+
             if (newHidden) {
                 newHidden=false;
-                CreateTimer(0.5, Timer_GiveHiddenPowers, GetClientUserId(hidden));
+                CreateTimer(0.5, Timer_GiveHiddenPowers, GetClientUserId(client));
             }
-            
+
             if (hiddenAway) {
                 hiddenAwayTime+=tickInterval;
                 if (hiddenAwayTime>HIDDEN_AWAY_TIME) {
-                    ForcePlayerSuicide(i);
+                    ForcePlayerSuicide(client);
                     PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed because he was away", PLUGIN_NAME);
                     continue;
                 }
             }
-            
-            new eflags=GetEntityFlags(i);
-            
-            // Save checking for these conditions, always do them.
-            TF2_RemovePlayerDisguise(i);
-            TF2_RemoveCondition(i, TFCond_DeadRingered);
-            TF2_RemoveCondition(i, TFCond_Kritzkrieged);
-            TF2_RemoveCondition(i, TFCond_MarkedForDeath);
 
-            
+            new eflags=GetEntityFlags(client);
+
+            // Save checking for these conditions, always do them.
+            TF2_RemovePlayerDisguise(client);
+            TF2_RemoveCondition(client, TFCond_DeadRingered);
+            TF2_RemoveCondition(client, TFCond_Kritzkrieged);
+            TF2_RemoveCondition(client, TFCond_MarkedForDeath);
+
             if (hiddenInvisibility>0.0) {
                 hiddenInvisibility-=tickInterval;
                 if (hiddenInvisibility<0.0) {
                     hiddenInvisibility=0.0;
-                    ForcePlayerSuicide(i);
+                    ForcePlayerSuicide(client);
                     PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 lost his powers!", PLUGIN_NAME);
                     continue;
                 }
             }
-            
+
             #if defined HIDDEN_BOO
                 if (hiddenBoo>0.0) {
                     hiddenBoo-=tickInterval;
@@ -337,11 +333,11 @@ public OnGameFrame() {
                     }
                 }
             #endif
-            
+
             if (!hiddenStick) {
                 HiddenUnstick();
                 if (hiddenStamina<HIDDEN_STAMINA_TIME) {
-                    hiddenStamina += tickInterval/2;
+                    hiddenStamina+=tickInterval/2;
                     if (hiddenStamina>HIDDEN_STAMINA_TIME) {
                         hiddenStamina=HIDDEN_STAMINA_TIME;
                     }
@@ -352,11 +348,11 @@ public OnGameFrame() {
                     hiddenStamina=0.0;
                     hiddenStick=false;
                     HiddenUnstick();
-                } else if (GetEntityMoveType(hidden)==MOVETYPE_WALK) {
-                    SetEntityMoveType(hidden, MOVETYPE_NONE);
+                } else if (GetEntityMoveType(client)==MOVETYPE_WALK) {
+                    SetEntityMoveType(client, MOVETYPE_NONE);
                 }
             }
-            
+
             if (eflags & FL_ONGROUND || hiddenStick) {
                 if (hiddenJump>0.0) {
                     hiddenJump-=tickInterval;
@@ -365,72 +361,71 @@ public OnGameFrame() {
                     }
                 }
             }
-            
+
             if (hiddenVisible>0.0) {
                 hiddenVisible-=tickInterval;
                 if (hiddenVisible<0.0) {
                     hiddenVisible=0.0;
                 }
             }
-            
+
             if (hiddenInvisibility>0.0) {
                 if (hiddenVisible<=0.0) {
-                    if (!TF2_IsPlayerInCondition(i, TFCond_Cloaked)) {
-                        TF2_AddCondition(i, TFCond_Cloaked, -1.0);
+                    if (!TF2_IsPlayerInCondition(client, TFCond_Cloaked)) {
+                        TF2_AddCondition(client, TFCond_Cloaked, -1.0);
                     }
                 } else {
-                    TF2_RemoveCondition(i, TFCond_Cloaked);
+                    TF2_RemoveCondition(client, TFCond_Cloaked);
                 }
             } else {
-                TF2_RemoveCondition(i, TFCond_Cloaked);
+                TF2_RemoveCondition(client, TFCond_Cloaked);
             }
-                        
-            if (TF2_IsPlayerInCondition(i, TFCond_OnFire)) {
+
+            if (TF2_IsPlayerInCondition(client, TFCond_OnFire)) {
                 AddHiddenVisible(f_hiddenVisibleDamage);
-                TF2_RemoveCondition(i, TFCond_OnFire);
-                GiveHiddenVision(i);
+                TF2_RemoveCondition(client, TFCond_OnFire);
+                GiveHiddenVision(client);
             }
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Ubercharged)) {
-                TF2_RemoveCondition(i, TFCond_Ubercharged);
-                GiveHiddenVision(i);
+            if (TF2_IsPlayerInCondition(client, TFCond_Ubercharged)) {
+                TF2_RemoveCondition(client, TFCond_Ubercharged);
+                GiveHiddenVision(client);
             }
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Jarated)) {
+            if (TF2_IsPlayerInCondition(client, TFCond_Jarated)) {
                 AddHiddenVisible(f_hiddenVisibleJarate);
-                TF2_RemoveCondition(i, TFCond_Jarated);
-                GiveHiddenVision(i);
+                TF2_RemoveCondition(client, TFCond_Jarated);
+                GiveHiddenVision(client);
             }
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Milked)) {
+            if (TF2_IsPlayerInCondition(client, TFCond_Milked)) {
                 AddHiddenVisible(f_hiddenVisibleJarate);
-                TF2_RemoveCondition(i, TFCond_Milked);
+                TF2_RemoveCondition(client, TFCond_Milked);
             }
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Bonked)) {
+            if (TF2_IsPlayerInCondition(client, TFCond_Bonked)) {
                 AddHiddenVisible(f_hiddenVisibleJarate);
-                TF2_RemoveCondition(i, TFCond_Bonked);
+                TF2_RemoveCondition(client, TFCond_Bonked);
             }
             
-            if (TF2_IsPlayerInCondition(i, TFCond_Bleeding)) {
+            if (TF2_IsPlayerInCondition(client, TFCond_Bleeding)) {
                 AddHiddenVisible(f_hiddenVisibleDamage);
-                TF2_RemoveCondition(i, TFCond_Bleeding);
-                GiveHiddenVision(i);
+                TF2_RemoveCondition(client, TFCond_Bleeding);
+                GiveHiddenVision(client);
             }
+
+            SetEntPropFloat(client, Prop_Send, "m_flCloakMeter", hiddenInvisibility/HIDDEN_INVISIBILITY_TIME*100.0);
             
-            SetEntPropFloat(i, Prop_Send, "m_flCloakMeter", hiddenInvisibility/HIDDEN_INVISIBILITY_TIME*100.0);
-            
-            if (GetEntProp(i, Prop_Send, "m_bGlowEnabled")) {
-                SetEntProp(i, Prop_Send, "m_bGlowEnabled", 0);
+            if (GetEntProp(client, Prop_Send, "m_bGlowEnabled")) {
+                SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
             }
-            
-        } else if (IsClientPlaying(i)) {
-            if (HTeam:GetClientTeam(i) == HTeam_Hidden) {
-                ChangeClientTeam(i, _:HTeam_Iris);
+        } else if (client != hidden) {
+            if (HTeam:GetClientTeam(client) == HTeam_Hidden) {
+                ChangeClientTeam(client, _:HTeam_Iris);
             }
-            
-            if (IsPlayerAlive(i) && !GetEntProp(i, Prop_Send, "m_bGlowEnabled")) {
-                SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+
+            if (!GetEntProp(client, Prop_Send, "m_bGlowEnabled")) {
+                SetEntProp(client, Prop_Send, "m_bGlowEnabled", 1);
             }
         }
     }
@@ -734,10 +729,6 @@ stock bool:CanPlay() {
     }
 }
 
-stock IsClientPlaying(i) {
-    return GetClientTeam(i)>0 && !GetEntProp(i, Prop_Send, "m_bArenaSpectator");
-}
-
 stock MakeTeamWin(team) {
     new ent = FindEntityByClassname(-1, "team_control_point_master");
     if (ent == -1) {
@@ -895,6 +886,7 @@ stock ShowHiddenHP(Float:duration) {
     SetHudTextParams(-1.0, 0.3, duration, 255, 255, 255, 255);
 
     LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOBOTS) {
+        if (client==hidden) continue;
         ShowHudText(client, 0, "Hidden Health: %.1f%%", perc);
     } 
     
@@ -981,17 +973,14 @@ stock bool:HiddenBoo() {
     
     new targets[MaxClients];
     new targetsCount;
-    for (new i=1;i<=MaxClients;++i) {
-        if (!IsClientInGame(i)) continue;
-        if (!IsPlayerAlive(i)) continue;
-        if (i==hidden) continue;
-        GetClientAbsOrigin(i, pos2);
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_ALIVE|CLIENTFILTER_NOBOTS|CLIENTFILTER_NOSPECTATORS) {
+        if (client==hidden) continue;
+        GetClientAbsOrigin(client, pos2);
         if (GetVectorDistance(pos, pos2, true)>196.0*196.0) {
             continue;
         }
-        
-        TF2_StunPlayer(i, HIDDEN_BOO_DURATION, _, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_THIRDPERSON, hidden);
-        targets[targetsCount++] = i;
+
+        TF2_StunPlayer(client, HIDDEN_BOO_DURATION, _, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_THIRDPERSON, hidden);
     }
     targets[targetsCount++] = hidden;
     
