@@ -467,6 +467,8 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
 
     if (client != hidden && team==HTeam_Hidden) {
         ChangeClientTeam(client, _:HTeam_Iris);
+    } else if (client == hidden && team==HTeam_Iris) {
+        ChangeClientTeam(client, _:HTeam_Hidden);
     }
 }
 
