@@ -1,0 +1,7 @@
+#!/bin/bash 
+
+RET=0
+spcomp scripting/hidden.sp -iscripting/include -oplugins/hidden.smx
+let RET=$?
+
+exit $RET
