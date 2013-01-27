@@ -27,7 +27,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.10.6b"
+#define PLUGIN_VERSION "2.10.7b"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -773,7 +773,7 @@ stock SelectHidden() {
         hidden=forced;
         forceNextHidden=0;
     } else {
-        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS|CLIENTFILTER_NOOBSERVERS);
+        hidden = Client_GetRandom(CLIENTFILTER_NOBOTS|CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOSPECTATORS);
     }
    
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
@@ -958,7 +958,7 @@ stock OverlayCommand(client, String:overlay[]) {
 }
 
 stock Client_RespawnAll() {
-    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOBOTS|CLIENTFILTER_NOSPECTATORS|CLIENTFILTER_NOOBSERVERS) {
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAMEAUTH|CLIENTFILTER_NOBOTS|CLIENTFILTER_NOSPECTATORS) {
         CreateTimer(0.1, Timer_Respawn, client);
     }
 }
