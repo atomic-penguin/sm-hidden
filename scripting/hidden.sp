@@ -18,7 +18,6 @@
 
 #pragma semicolon 1
 #include <sourcemod>
-#include <sdktools>
 #include <tf2>
 #include <tf2_stocks>
 #undef REQUIRE_EXTENSIONS
@@ -27,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.0"
+#define PLUGIN_VERSION "2.11.1"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -178,6 +177,13 @@ public OnMapStart() {
         if (steamtools) SetGameDescription();
     } else if (!cvar_enabled || !IsArenaMap()) {
         if (steamtools) SetGameDescription();
+        DeactivatePlugin();
+    }
+}
+
+public OnMapEnd() {
+    new bool:cvar_enabled=GetConVarBool(cv_enabled);
+    if (cvar_enabled && activated) {
         DeactivatePlugin();
     }
 }
