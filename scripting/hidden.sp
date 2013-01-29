@@ -26,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.1"
+#define PLUGIN_VERSION "2.11.2"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -161,11 +161,10 @@ public OnConfigsExecuted() {
     new bool:cvar_enabled=GetConVarBool(cv_enabled);
     if (cvar_enabled && IsArenaMap()) {
         ActivatePlugin();
-        if (steamtools) SetGameDescription();
     } else if (!cvar_enabled || !IsArenaMap()) {
-        if (steamtools) SetGameDescription();
         DeactivatePlugin();
-    } 
+    }
+    if (steamtools) SetGameDescription(); 
 }
 
 public OnMapStart() {
@@ -174,11 +173,10 @@ public OnMapStart() {
     new bool:cvar_enabled=GetConVarBool(cv_enabled);
     if (cvar_enabled && IsArenaMap()) {
         ActivatePlugin();
-        if (steamtools) SetGameDescription();
     } else if (!cvar_enabled || !IsArenaMap()) {
-        if (steamtools) SetGameDescription();
         DeactivatePlugin();
     }
+    if (steamtools) SetGameDescription();
 }
 
 public OnMapEnd() {
@@ -186,6 +184,7 @@ public OnMapEnd() {
     if (cvar_enabled && activated) {
         DeactivatePlugin();
     }
+    if (steamtools) SetGameDescription();
 }
 
 stock ActivatePlugin() {
@@ -999,7 +998,7 @@ stock bool:HiddenBoo() {
 stock SetGameDescription() {
     new bool:cvar_enabled = GetConVarBool(cv_enabled);
     decl String:gameDesc[64];
-    if (cvar_enabled && IsArenaMap()) {
+    if (cvar_enabled && activated) {
         Format(gameDesc, sizeof(gameDesc), "%s v%s", PLUGIN_NAME, PLUGIN_VERSION);
     } else {
         gameDesc = "Team Fortress";
