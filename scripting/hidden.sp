@@ -26,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.2"
+#define PLUGIN_VERSION "2.11.3"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -543,8 +543,8 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
             if (hiddenHp>hiddenHpMax) {
                 hiddenHp=hiddenHpMax;
             }
+            Effect_DissolvePlayerRagDoll(victim, DISSOLVE_CORE);
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 killed \x03%N\x01 and ate his body", PLUGIN_NAME, victim);
-            CreateTimer(0.1, Timer_Dissolve, victim);
         }
     }
 }
@@ -611,10 +611,6 @@ public Action:Timer_ResetHidden(Handle:timer) {
 
 public Action:Timer_Respawn(Handle:timer, any:data) {
     TF2_RespawnPlayer(data);
-}
-
-public Action:Timer_Dissolve(Handle:timer, any:data) {
-    Dissolve(data, 3);
 }
 
 public Action:Timer_GiveHiddenPowers(Handle:timer, any:data) {
@@ -702,27 +698,6 @@ stock bool:IsArenaMap() {
 
 public OnClientDisconnect(client) {
     if (client==hidden) ResetHidden();
-}
-
-stock Dissolve(client, type) {
-    if (!IsClientInGame(client)) return;
-
-    new ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
-    if (ragdoll<0) return;
-
-    decl String:dname[32], String:dtype[32];
-    Format(dname, sizeof(dname), "dis_%d", client);
-    Format(dtype, sizeof(dtype), "%d", type);
-    
-    new ent = CreateEntityByName("env_entity_dissolver");
-    if (ent>0) {
-        DispatchKeyValue(ragdoll, "targetname", dname);
-        DispatchKeyValue(ent, "dissolvetype", dtype);
-        DispatchKeyValue(ent, "target", dname);
-        DispatchKeyValue(ent, "magnitude", "10");
-        AcceptEntityInput(ent, "Dissolve", ragdoll, ragdoll);
-        AcceptEntityInput(ent, "Kill");
-    }
 }
 
 stock bool:CanPlay() {
