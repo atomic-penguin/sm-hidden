@@ -26,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.2"
+#define PLUGIN_VERSION "2.11.4"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -902,16 +902,18 @@ stock ShowHiddenHP(Float:duration) {
     } else {
         SetHudTextParams(-1.0, 0.3, duration, 255, 0, 0, 255);
     }
+
+    if (Client_IsIngame(hidden)) {    
+        ShowHudText(hidden, 0, "Hidden Health: %.1f%%", perc);
     
-    ShowHudText(hidden, 0, "Hidden Health: %.1f%%", perc);
+        SetHudTextParams(-1.0, 0.325, duration, 255, 255, 255, 255);
+        ShowHudText(hidden, 1, "Stamina: %.0f%%", hiddenStamina/HIDDEN_STAMINA_TIME*100.0);
     
-    SetHudTextParams(-1.0, 0.325, duration, 255, 255, 255, 255);
-    ShowHudText(hidden, 1, "Stamina: %.0f%%", hiddenStamina/HIDDEN_STAMINA_TIME*100.0);
-    
-    #if defined HIDDEN_BOO
-        SetHudTextParams(-1.0, 0.35, duration, 255, 255, 255, 255);
-        ShowHudText(hidden, 2, "Boo: %.0f%%", 100.0-hiddenBoo/HIDDEN_BOO_TIME*100.0);
-    #endif
+        #if defined HIDDEN_BOO
+            SetHudTextParams(-1.0, 0.35, duration, 255, 255, 255, 255);
+            ShowHudText(hidden, 2, "Boo: %.0f%%", 100.0-hiddenBoo/HIDDEN_BOO_TIME*100.0);
+        #endif
+    }
 }
 
 stock GiveHiddenPowers(i) {
