@@ -26,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.4"
+#define PLUGIN_VERSION "2.11.5"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -460,7 +460,7 @@ public Action:Timer_NewGame(Handle:timer) {
 
 public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast) {
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
-    if (!client || !IsClientInGame(client)) return;
+    if (!client || !Client_IsIngame(client)) return;
     if (IsFakeClient(client)) return;
 
     new HTeam:team = HTeam:GetEventInt(event, "team");
@@ -521,15 +521,15 @@ public Action:player_death(Handle:event, const String:name[], bool:dontBroadcast
 
     if (!playing) return;
  
-    if (victim==hidden && attacker!=0) { // Encountered an issue where attacker was 0
+    if (victim==hidden) {
         hiddenHp=0;
         RemoveHiddenPowers(victim);
-        if (attacker!=hidden) {
+        if (Client_IsIngame(attacker) && attacker!=hidden) {
             forceNextHidden = GetClientUserId(attacker);
             PrintToChatAll("\x04[%s]\x01 \x03The Hidden\x01 was killed by \x03%N\x01!", PLUGIN_NAME, attacker); 
         }
     } else {
-        if (hidden!=0 && attacker==hidden) {
+        if (Client_IsIngame(hidden) && attacker==hidden) {
 
             // Remove firstblood crit
             new attacker_cond = GetEntProp(attacker, Prop_Send, "m_nPlayerCond");
@@ -705,7 +705,7 @@ public OnClientDisconnect(client) {
 }
 
 stock Dissolve(client, type) {
-    if (!IsClientInGame(client)) return;
+    if (!Client_IsIngame(client)) return;
 
     new ragdoll = GetEntPropEnt(client, Prop_Send, "m_hRagdoll");
     if (ragdoll<0) return;
@@ -945,14 +945,14 @@ stock RemoveHiddenPowers(i) {
 }
 
 stock ResetHidden() {
-    if (hidden!=0 && IsClientInGame(hidden)) {
+    if (hidden!=0 && Client_IsIngame(hidden)) {
         RemoveHiddenPowers(hidden);
     }
     hidden=0;
 }
 
 stock OverlayCommand(client, String:overlay[]) {    
-    if (client && IsClientInGame(client) && !IsClientInKickQueue(client)) {
+    if (client && Client_IsIngame(client) && !IsClientInKickQueue(client)) {
         SetCommandFlags("r_screenoverlay", GetCommandFlags("r_screenoverlay") & (~FCVAR_CHEAT));
         ClientCommand(client, "r_screenoverlay %s", overlay);
     }
