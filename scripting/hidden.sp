@@ -26,7 +26,7 @@
 #include <smlib>
 
 #define PLUGIN_AUTHOR "atomic-penguin, daniel-murray"
-#define PLUGIN_VERSION "2.11.5"
+#define PLUGIN_VERSION "2.11.6"
 #define PLUGIN_NAME "TF2 Hidden"
 #define PLUGIN_DESCRIPTION "Hidden:Source-like mod for TF2"
 #define PLUGIN_URL "https://github.com/atomic-penguin/sm-hidden"
@@ -108,7 +108,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max) 
 
 public OnPluginStart() {
     LoadTranslations("common.phrases");
-    
+    new Handle:cv_version = CreateConVar("sm_tf2hidden_version", PLUGIN_VERSION, "SM TF2 Hidden version", FCVAR_NOTIFY | FCVAR_PLUGIN | FCVAR_SPONLY); 
     cv_enabled = CreateConVar("sm_hidden_enabled", "1", "Enables/disables the plugin.", 0, true, 0.0, true, 1.0);
     cv_hidden_alltalk = CreateConVar("sm_hidden_alltalk", "1", "Turn alltalk on and voice icons off.", 0, true, 0.0, true, 1.0);
     cv_allowpyro = CreateConVar("sm_hidden_allowpyro", "1", "Set whether pyro is allowed on team IRIS", 0, true, 0.0, true, 1.0);
@@ -132,6 +132,8 @@ public OnPluginStart() {
 #if defined _steamtools_included
     steamtools = LibraryExists("SteamTools");
 #endif
+
+    SetConVarString(cv_version, PLUGIN_VERSION);
 }
 
 public OnPluginEnd() {

@@ -107,6 +107,9 @@ See a full life of Iris team gameplay [here](https://www.youtube.com/watch?v=H8W
 
 ## ConVars
 
+* `sm_tf2hidden_version`
+  - Public cvar for tracking plugin usage
+
 * `sm_hidden_enabled`
   - def = 1, Enables/disables the plugin
 
