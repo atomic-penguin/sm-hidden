@@ -1,0 +1,100 @@
+This is a [URL="http://www.hidden-source.com/"]Hidden:Source[/URL]-like mod for TF2 arena, based on Matheus28's unmaintained [URL="http://forums.alliedmods.net/showthread.php?t=143577"][TF2] The Hidden[/URL] mod.
+
+Over the course of the last month myself and smiley addressed many of the known issues in the existing plugin, and learned a lot about Sourcemod during the process.  This is the first SM plugin for either of us, so any feedback or suggested improvements from other SM developers would be greatly appreciated.
+
+Development repository is hosted on [URL=https://github.com/atomic-penguin/sm-hidden]Github[/URL]
+
+[B]Known issue: disable replay if your server experiences crashing.[/B]
+
+[LIST]
+[*]Hidden features
+[INDENT][LIST]
+[*]Increased health points for Hidden.
+[*]Increased movement speed for Hidden.
+[*]Increased jump heighth and distance for Hidden.
+[*]Reduced effectiveness of certain weapon effects against Hidden, e.g. fire, jarate, bleed.
+[*]Hidden is almost always cloaked.  Except when attacking, pouncing, taking damage.
+[*]attack2 bind lets Hidden super-jump/pounce
+[*]reload bind lets Hidden stun team Iris players
+[/LIST][/INDENT]
+[*]Team Iris features
+[INDENT][LIST]
+[*]Spies have been disabled.
+[*]Sentry guns have been blocked.
+[*]Engineers can optionally be disabled.
+[*]Iris teammates can be seen with objective glow
+[*]Hidden's killer gets to play as the Hidden next, or a random player is selected.
+[/LIST][/INDENT]
+[/LIST]
+
+[LIST]
+[*]Commands
+[INDENT][LIST]
+[*]sm_nexthidden <client name> - forces a player to be the next hidden
+[*]sm_hidden_enable - enables the plugin
+[*]sm_hidden_disable - disables the plugin
+[/LIST][/INDENT]
+[*]Cvars
+[INDENT][LIST]
+[*]sm_hidden_enabled - def. 1, enables/disables the plugin.
+[*]sm_hidden_alltalk - def. 1, turns alltalk on, and voiceicons off.
+[*]sm_hidden_allowpyro - def. 1, whether to allow pyro on team Iris.
+[*]sm_hidden_allowengineer - def. 1, whether to allow engineer on team Iris.
+[*]sm_hidden_visible_damage - def 0.5, time Hidden is visible when taking regular weapon damage.
+[*]sm_hidden_visible_jarate - def 1.0, time Hidden is visible when splashed (jarate/milk), bonked.
+[*]sm_hidden_visible_pounce - def 0.25, time Hidden is visible when pouncing.
+[/LIST][/INDENT]
+[/LIST]
+
+[LIST]
+[*]Installation
+[INDENT][LIST]
+[*]Copy hidden.smx to plugins directory.  Optionally install steamtools exension.  Depends on smlib as a third party build dependency.  Use the attached .smx file, rather than the "Get Plugin" link.
+[*]WARNING: AFK managers, scramble, and autobalance plugins may interfere with player queueing and spawning.  This has not been thoroughly tested and it is recommended to disable such plugins.
+[/LIST][/INDENT]
+[*]Dependencies
+[INDENT][LIST]
+[*]Optional [URL="http://forums.alliedmods.net/showthread.php?t=129763"]steamtools[/URL] extension to change Server game description.
+[*]The [URL=http://sourcemodplugins.org/smlib]smlib[/URL] stock includes are a build dependency.
+[/LIST][/INDENT]
+[/LIST]
+
+[LIST]
+[*]Plans
+[INDENT][LIST]
+[*]Class preference restoration for players who have just played the Hidden character.
+[/LIST][/INDENT]
+[/LIST]
+
+[LIST]
+[*]Media
+[INDENT][LIST]
+[*]Iris [URL="https://www.youtube.com/watch?v=H8WquUK2kLI"]gameplay[/URL]
+[*]Iris [URL="https://www.youtube.com/watch?v=nJN_dUMeeaQ"]objective glow[/URL]
+[/LIST][/INDENT]
+[/LIST]
+
+[LIST]
+[*]Changelog v2.11.6
+[INDENT][LIST]
+[*] Fix spurious strace errors
+[*] player_death strace fix-up
+[*] Add public cvar sm_tf2hidden_version for plugin tracking
+[/INDENT][/LIST]
+[*]Changlog v2.11.0
+[INDENT][LIST]
+[*]All factorable for loops are now macros using appropriate CLIENTFILTERs
+[*]Bump Hidden stamina up to 10, formerly 7.5
+[/INDENT][/LIST]
+[*]Changelog v2.10.7
+[INDENT][LIST]
+[*]Fix player_team switch condition which led to overflow, and client crash.
+[*]Tweak clientfilter loops.
+[/LIST][/INDENT]
+[*]Changelog v2.10.4
+[INDENT][LIST]
+[*]Hidden's attacker was equal to 0, causing a bug. Issue, [url]https://forums.alliedmods.net/showpost.php?p=1881184&postcount=4[/url]
+[*]Guard DeactivatePlugin. Issue, [url]https://forums.alliedmods.net/showpost.php?p=1881306&postcount=9[/url]
+[*]Add CLIENTFILTER_NOOBSERVERS and CLIENTFILTER_NOSPECTATORS to LOOP_CLIENTS
+[/LIST][/INDENT]
+[/LIST]
