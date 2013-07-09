@@ -58,12 +58,6 @@ public Plugin:myinfo = {
     url = PLUGIN_URL
 }
 
-enum HTeam {
-    HTeam_Unassigned = TFTeam_Unassigned,
-    HTeam_Spectator = TFTeam_Spectator,
-    HTeam_Hidden = TFTeam_Blue,
-    HTeam_Iris = TFTeam_Red
-}
 
 new hidden=0;
 new hiddenHp;
@@ -427,8 +421,8 @@ public OnGameFrame() {
                 SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
             }
         } else if (client != hidden) {
-            if (HTeam:GetClientTeam(client) == HTeam_Hidden) {
-                ChangeClientTeam(client, _:HTeam_Iris);
+            if (TFTeam:GetClientTeam(client) == TFTeam_Blue) {
+                ChangeClientTeam(client, _:TFTeam_Red);
             }
 
             if (!GetEntProp(client, Prop_Send, "m_bGlowEnabled")) {
@@ -465,12 +459,12 @@ public Action:player_team(Handle:event, const String:name[], bool:dontBroadcast)
     if (!client || !Client_IsIngame(client)) return;
     if (IsFakeClient(client)) return;
 
-    new HTeam:team = HTeam:GetEventInt(event, "team");
+    new TFTeam:team = TFTeam:GetEventInt(event, "team");
 
-    if (client != hidden && team==HTeam_Hidden) {
-        ChangeClientTeam(client, _:HTeam_Iris);
-    } else if (client == hidden && team==HTeam_Iris) {
-        ChangeClientTeam(client, _:HTeam_Hidden);
+    if (client != hidden && team==TFTeam_Blue) {
+        ChangeClientTeam(client, _:TFTeam_Red);
+    } else if (client == hidden && team==TFTeam_Red) {
+        ChangeClientTeam(client, _:TFTeam_Blue);
     }
 }
 
@@ -481,19 +475,19 @@ public Action:player_spawn(Handle:event, const String:name[], bool:dontBroadcast
     new bool:cvar_allowengineer = GetConVarBool(cv_allowengineer);
     
     if ((client==hidden) && (class!=TFClass_Spy)) {
-        ChangeClientTeam(client, _:HTeam_Hidden);
+        ChangeClientTeam(client, _:TFTeam_Blue);
         TF2_SetPlayerClass(client, TFClass_Spy, false, true);
         newHidden=true;
         CreateTimer(0.1, Timer_Respawn, client);
     } else if (client!=hidden) {
         if ((client==g_lastHidden) && (g_lastHiddenSavedClass!=TFClass_Unknown)) { //if we haven't set them to their pre-hidden class choice
-            ChangeClientTeam(client, _:HTeam_Iris);
+            ChangeClientTeam(client, _:TFTeam_Red);
             TF2_SetPlayerClass(client, g_lastHiddenSavedClass, false, true);
             g_lastHiddenSavedClass=TFClass_Unknown;
             g_lastHidden=0;
             CreateTimer(0.1, Timer_Respawn, client);
         } else if (class==TFClass_Unknown || class==TFClass_Spy || ((class==TFClass_Engineer) && (!cvar_allowengineer)) || ((class==TFClass_Pyro) && (!cvar_allowpyro))) {
-            ChangeClientTeam(client, _:HTeam_Iris);
+            ChangeClientTeam(client, _:TFTeam_Red);
             TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
             PrintToChat(client, "\x04[%s]\x01 You cannot use this class on team IRIS", PLUGIN_NAME);
             CreateTimer(0.1, Timer_Respawn, client);
@@ -777,7 +771,7 @@ stock SelectHidden() {
     }
    
     g_hiddenSavedClass = TF2_GetPlayerClass(hidden); //grab player class *before* it is set to spy
-    ChangeClientTeam(hidden, _:HTeam_Hidden); 
+    ChangeClientTeam(hidden, _:TFTeam_Blue); 
     TF2_SetPlayerClass(hidden, TFClass_Spy, false, true);
     
     if (!IsPlayerAlive(hidden)) {
