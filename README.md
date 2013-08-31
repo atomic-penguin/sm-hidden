@@ -2,8 +2,8 @@
 
 TF2 Hidden is a Hidden:Source-like SourceMod plugin for [Team Fortress 2](http://www.teamfortress.com/).
 
-* [Allied Mods Forum Post](https://forums.alliedmods.net/showthread.php?p=1880477#post1880477)
-* Get [Plugin](https://forums.alliedmods.net/attachment.php?attachmentid=115025&d=1359143203),
+* [Allied Mods Forum Post](https://forums.alliedmods.net/showthread.php?p=1880477#post1880477) (needs to be updated)
+* Get [Plugin](https://forums.alliedmods.net/attachment.php?attachmentid=115025&d=1359143203) (needs to be updated),
 * Get [Source](https://github.com/atomic-penguin/sm-hidden),
 
 ## Requirements
@@ -77,7 +77,6 @@ See a full life of Iris team gameplay [here](https://www.youtube.com/watch?v=H8W
 * How is the next Hidden determined?
   - If an Iris player kills the Hidden, then they will be rewarded by getting to play the Hidden next.
   - If no Iris player kills the Hidden, then a random player will be selected to play the Hidden next.
-  - A server admin, may force the next Hidden with the `sm_nexthidden` command, instead of random selection.
 
 * What maps can we play this gamemode on?
   - The plugin will only run on Arena mode maps.  Because there is only one life per round in arena,
@@ -96,9 +95,6 @@ See a full life of Iris team gameplay [here](https://www.youtube.com/watch?v=H8W
 
 ## Admin Commands
 
-* `sm_nexthidden <client-name>`
- - Forces a player to be the next Hidden
-
 * `sm_hidden_enable`
   - Enable the plugin
 
@@ -110,23 +106,17 @@ See a full life of Iris team gameplay [here](https://www.youtube.com/watch?v=H8W
 * `sm_hidden_enabled`
   - def = 1, Enables/disables the plugin
 
-* `sm_hidden_alltalk`
-  - def = 1, Turn alltalk and voice icons off
-
 * `sm_hidden_allowpyro`
   - def = 1, Set whether pyro is allowed on team Iris
 
 * `sm_hidden_allowengineer`
   - def = 1, Set Whether engineer is allowed on team Iris
 
-* `sm_hidden_visible_damage`
-  - def = 0.5, Time hidden is visible for (seconds) on taking weapon damage
+* `sm_hidden_allow_sniper`
+  - def = 0, Set Whether sniper is allowed on team Iris
 
-* `sm_hidden_visible_jarate`
-  - def = 1, Time hidden is visible for (seconds) when splashed or bonked
-
-* `sm_hidden_visible_pounce`
-  - def = 0.25, Time hidden is visible for (seconds) when pouncing
+* `sm_hidden_alltalk`
+  - def = 1, Turn alltalk and voice icons off
 
 ## How Do I Suggest a Feature or Submit a Bug?
 
