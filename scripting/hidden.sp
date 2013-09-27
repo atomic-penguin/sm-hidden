@@ -728,6 +728,7 @@ stock bool:PerformRoundInit()
                 TF2_RespawnPlayer(i);
             }
         }
+        InitialRoundInit = true;
     }
     return true;
 }
