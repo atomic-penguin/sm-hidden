@@ -52,8 +52,6 @@ enum HTeam
 
 new bool:activated = false;
 new current_pool[MAX_PLAYERS + 1];
-new bool:pool_lock = false;
-new bool:round_init = false;
 
 //cvars
 new Handle:cv_enabled;
@@ -298,8 +296,6 @@ stock ActivatePlugin()
 
     AddCommandListener(Cmd_build, "build");
 
-    round_init = false;
-
     SetGameDescription();
 }
 
@@ -338,8 +334,6 @@ stock DeactivatePlugin()
     UnhookEvent("player_death", player_death);
 
     RemoveCommandListener(Cmd_build, "build");
-
-    round_init = false;
 
     SetGameDescription();
 }
@@ -539,28 +533,21 @@ public Action:teamplay_round_start(
     PrintToServer("[%s] @teamplay_round_start", PLUGIN_NAME);
 #endif
 
+    InitialRoundInit = false;
+
     if (PerformRoundInit())
     {
+        InitialRoundInit = true;
 #if DEBUG_LOGGING
         PrintToServer("[%s] Sucessful PerformRoundInit() hidden: %d",
             PLUGIN_NAME, hidden);
 #endif
-
-        if (InitialRoundInit == false)
-        {
-            if (FindConVar("mp_roundrestart"))
-            {
-                SetConVarInt(FindConVar("mp_roundrestart"), 1);
-            }
-            InitialRoundInit = true;
-        }
     }
     else
     {
 #if DEBUG_LOGGING
-    PrintToServer("[%s] Unsucessfull PerformRoundInit()", PLUGIN_NAME);
+        PrintToServer("[%s] Unsucessfull PerformRoundInit()", PLUGIN_NAME);
 #endif
-        InitialRoundInit = false;
     }
 
     return Plugin_Continue;
@@ -573,162 +560,154 @@ stock bool:PerformRoundInit()
         return false;
     }
 
-    if (!round_init)
+    hidden_jump_blocker = true;
+
+    for (new i = 1; i < MAX_PLAYERS + 1; ++i)
     {
-        pool_lock = false;
+        current_pool[i] = 0;
+    }
+    
+    LOOP_CLIENTS(client, CLIENTFILTER_INGAME)
+    {
+        current_pool[client] = 1;
+    }
 
-        hidden_jump_blocker = true;
-
+    // deteremine hidden
+    new selected_player = 0;
+    if (next_hidden != 0)
+    {
+        selected_player = next_hidden;
+        next_hidden = 0;
+    }
+    else
+    {
+        new number_of_valid_players = 0;
         for (new i = 1; i < MAX_PLAYERS + 1; ++i)
         {
-            current_pool[i] = 0;
+           if (current_pool[i] == 1)
+           {
+                number_of_valid_players += 1;
+           }
         }
-        
-        LOOP_CLIENTS(client, CLIENTFILTER_INGAME)
+        new random = GetRandomInt(1, number_of_valid_players);
+        if (random == previous_hidden)
         {
-            current_pool[client] = 1;
-        }
-
-        // deteremine hidden
-        new selected_player = 0;
-        if (next_hidden != 0)
-        {
-            selected_player = next_hidden;
-            next_hidden = 0;
-        }
-        else
-        {
-            new number_of_valid_players = 0;
-            for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+            if (random == 1)
             {
-               if (current_pool[i] == 1)
-               {
-                    number_of_valid_players += 1;
-               }
+                random += 1;
             }
-            new random = GetRandomInt(1, number_of_valid_players);
-            if (random == previous_hidden)
+            else
             {
-                if (random == 1)
-                {
-                    random += 1;
-                }
-                else
-                {
-                    random -= 1;
-                }
+                random -= 1;
             }
-            new count_so_far = 0;
-            for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+        }
+        new count_so_far = 0;
+        for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+        {
+            if (current_pool[i] == 1)
             {
-                if (current_pool[i] == 1)
+                count_so_far += 1;
+                if (count_so_far == random)
                 {
-                    count_so_far += 1;
-                    if (count_so_far == random)
-                    {
-                        selected_player = i;
-                    }
+                    selected_player = i;
                 }
             }
         }
+    }
 
 #if DEBUG_LOGGING
     PrintToServer("[%s] selected client:%N(%d) to be the hidden",
         PLUGIN_NAME, selected_player, selected_player);
 #endif
 
-        if (selected_player == 0)
+    if (selected_player == 0)
+    {
+        return false;
+    }
+
+    hidden = selected_player;
+
+    decl String:selected_player_name[64];
+    if (GetClientName(selected_player, selected_player_name, 64))
+    {
+        PrintToChatAll("\x04[%s] \x03%s \x01was selected to be \
+            \x03The Hidden\x01!", PLUGIN_NAME, selected_player_name);
+    }
+
+    current_hidden_kill_count = 0;
+
+    for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+    {
+        if ((previous_hidden != 0) && (i == previous_hidden))
         {
-            return false;
-        }
-
-        hidden = selected_player;
-
-        decl String:selected_player_name[64];
-        if (GetClientName(selected_player, selected_player_name, 64))
-        {
-            PrintToChatAll("\x04[%s] \x03%s \x01was selected to be \
-                \x03The Hidden\x01!", PLUGIN_NAME, selected_player_name);
-        }
-
-        current_hidden_kill_count = 0;
-
-        for (new i = 1; i < MAX_PLAYERS + 1; ++i)
-        {
-            if ((previous_hidden != 0) && (i == previous_hidden))
-            {
 #if DEBUG_LOGGING
     PrintToServer("[%s] found previous hidden as client:%N", PLUGIN_NAME, i);
 #endif
-                RemoveHiddenVision(i);
-                if ((hidden_previous_class != TFClass_Spy) && (hidden_previous_class != TFClass_Unknown))
-                {
-                    TF2_SetPlayerClass(i, hidden_previous_class, false, true);
-                    PrintToChat(i, "\x04[%s] \x01Restoring your \
-                    previous class selection.", PLUGIN_NAME);
+            RemoveHiddenVision(i);
+            if ((hidden_previous_class != TFClass_Spy) && (hidden_previous_class != TFClass_Unknown))
+            {
+                TF2_SetPlayerClass(i, hidden_previous_class, false, true);
+                PrintToChat(i, "\x04[%s] \x01Restoring your \
+                previous class selection.", PLUGIN_NAME);
 #if DEBUG_LOGGING
     PrintToServer("[%s] recorded hiddens previous class as:%d",
         PLUGIN_NAME, hidden_previous_class);
 #endif
-                }
-                else
-                {
-                    TF2_SetPlayerClass(i, TFClass_Soldier, false, true);
-                    Client_PrintToChat(i, true, "{G}[%s] {N}You \
-                    cannot play {B}Spy {N}on the {R}Red {N}team \
-                    in this game mode.", PLUGIN_NAME);
+            }
+            else
+            {
+                TF2_SetPlayerClass(i, TFClass_Soldier, false, true);
+                Client_PrintToChat(i, true, "{G}[%s] {N}You \
+                cannot play {B}Spy {N}on the {R}Red {N}team \
+                in this game mode.", PLUGIN_NAME);
 #if DEBUG_LOGGING
     PrintToServer("[%s] recorded hiddens previous class as:default_soldier",
         PLUGIN_NAME);
 #endif
 
-                }
             }
         }
+    }
 
-        if ((hidden != 0) && (current_pool[hidden] == 1))
+    if ((hidden != 0) && (current_pool[hidden] == 1))
+    {
+        if (TF2_GetPlayerClass(hidden) != TFClass_Spy || TF2_GetPlayerClass(hidden) != TFClass_Unknown)
         {
-            if (TF2_GetPlayerClass(hidden) != TFClass_Spy || TF2_GetPlayerClass(hidden) != TFClass_Unknown)
-            {
-                hidden_previous_class = TF2_GetPlayerClass(hidden);
-            }
-            else
-            {
-                hidden_previous_class = TFClass_Soldier;
-            }
+            hidden_previous_class = TF2_GetPlayerClass(hidden);
         }
+        else
+        {
+            hidden_previous_class = TFClass_Soldier;
+        }
+    }
 #if DEBUG_LOGGING
     PrintToServer("[%s] recorded hiddens previous class as:%d",
         PLUGIN_NAME, hidden_previous_class);
 #endif
-        hidden_visible = 0.0;
-        hidden_invisibility = HIDDEN_INVISIBILITY_TIME;
-        previous_hidden = hidden;
-        pool_lock = true;
-        round_init = true;
-        TF2_SetPlayerClass(hidden, TFClass_Spy);
-        ChangeClientTeam(hidden, _:HTeam_Hidden);
+    hidden_visible = 0.0;
+    hidden_invisibility = HIDDEN_INVISIBILITY_TIME;
+    previous_hidden = hidden;
+    TF2_SetPlayerClass(hidden, TFClass_Spy);
+    ChangeClientTeam(hidden, _:HTeam_Hidden);
 
-        for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+    for (new i = 1; i < MAX_PLAYERS + 1; ++i)
+    {
+        if (current_pool[i] == 1)
         {
-            if (current_pool[i] == 1)
+            if (i == hidden)
             {
-                if (i == hidden)
-                {
-                    ChangeClientTeam(i, _:HTeam_Hidden);
-                }
-                else
-                {
-                    if (TF2_GetPlayerClass(i) == TFClass_Unknown)
-                    {
-                        TF2_SetPlayerClass(i, TFClass_Soldier);
-                    }
-                    ChangeClientTeam(i, _:HTeam_Iris);
-                }
-                TF2_RespawnPlayer(i);
+                ChangeClientTeam(i, _:HTeam_Hidden);
             }
+            else
+            {
+                if (TF2_GetPlayerClass(i) == TFClass_Unknown)
+                {
+                    TF2_SetPlayerClass(i, TFClass_Soldier);
+                }
+                ChangeClientTeam(i, _:HTeam_Iris);
+            }
+            TF2_RespawnPlayer(i);
         }
-        InitialRoundInit = true;
     }
     return true;
 }
@@ -752,7 +731,6 @@ public Action:teamplay_round_win(
 #endif
 
     pool_lock = false;
-    round_init = false;
     MakeHiddenVisible(30.0);
 }
 
@@ -990,66 +968,54 @@ public Action:player_changeclass(
 
     new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-    if (round_init)
+    if (client == hidden)
     {
-        if (client == hidden)
+        TF2_SetPlayerClass(client, TFClass_Spy, false, true);
+    }
+    else
+    {
+        if (GetEventInt(event, "class") == _:TFClass_Spy)
         {
-            TF2_SetPlayerClass(client, TFClass_Spy, false, true);
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            Client_PrintToChat(client, true, "{G}[%s] {N}You \
+                cannot play {B}Spy {N}on the {R}Red {N}team \
+                in this game mode.", PLUGIN_NAME);
         }
-        else
+        if ((GetEventInt(event, "class") == _:TFClass_Pyro)
+            && (!GetConVarBool(cv_allow_pyro)))
         {
-            if (GetEventInt(event, "class") == _:TFClass_Spy)
-            {
-                TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-                Client_PrintToChat(client, true, "{G}[%s] {N}You \
-                    cannot play {B}Spy {N}on the {R}Red {N}team \
-                    in this game mode.", PLUGIN_NAME);
-            }
-            if ((GetEventInt(event, "class") == _:TFClass_Pyro)
-                && (!GetConVarBool(cv_allow_pyro)))
-            {
-                TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-                Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
-                    spawned as a {R}Soldier {N}because {R}Pyro {N}is \
-                    currently {L}disabled{N}.", PLUGIN_NAME);
-            }
-            if ((GetEventInt(event, "class") == _:TFClass_Engineer)
-                && (!GetConVarBool(cv_allow_engy)))
-            {
-                TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-                Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
-                    spawned as a {R}Soldier {N}because {R}Engineer \
-                    {N}is currently {L}disabled{N}.", PLUGIN_NAME);
-            }
-            if ((GetEventInt(event, "class") == _:TFClass_Sniper)
-                && (!GetConVarBool(cv_allow_sniper)))
-            {
-                TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
-                Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
-                    spawned as a {R}Soldier {N}because {R}Sniper \
-                    {N}is currently {L}disabled{N}.", PLUGIN_NAME);
-            }
-
-            if (!pool_lock)
-            {
-                current_pool[client] = 1;
-                ChangeClientTeam(client, _:HTeam_Iris);
-            }
-            else
-            {
-                if (current_pool[client] == 1)
-                {
-                    ChangeClientTeam(client, _:HTeam_Iris);
-                }
-                else
-                {
-                    current_pool[client] = 0;
-                    ChangeClientTeam(client, _:HTeam_Spectator);
-                }
-            }
-
-            RemoveHiddenVision(client);
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
+                spawned as a {R}Soldier {N}because {R}Pyro {N}is \
+                currently {L}disabled{N}.", PLUGIN_NAME);
         }
+        if ((GetEventInt(event, "class") == _:TFClass_Engineer)
+            && (!GetConVarBool(cv_allow_engy)))
+        {
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
+                spawned as a {R}Soldier {N}because {R}Engineer \
+                {N}is currently {L}disabled{N}.", PLUGIN_NAME);
+        }
+        if ((GetEventInt(event, "class") == _:TFClass_Sniper)
+            && (!GetConVarBool(cv_allow_sniper)))
+        {
+            TF2_SetPlayerClass(client, TFClass_Soldier, false, true);
+            Client_PrintToChat(client, true,  "{G}[%s] {N}You were \
+                spawned as a {R}Soldier {N}because {R}Sniper \
+                {N}is currently {L}disabled{N}.", PLUGIN_NAME);
+        }
+
+        RemoveHiddenVision(client);
+    }
+
+    if (current_pool[client] == 0)
+    {
+        ChangeClientTeam(hidden, _:HTeam_Spectator);
+#if DEBUG_LOGGING
+        PrintToServer("[%s] client %N was not in the current_pool - moved to spec",
+            PLUGIN_NAME, client);
+#endif
     }
 
     return Plugin_Continue;
@@ -1092,7 +1058,6 @@ public Action:player_death(
     PrintToServer("[%s] @player_death - victim:%N attacker:%N",
         PLUGIN_NAME, victim, attacker);
 #endif
-
 
     current_pool[victim] = 0;
 
