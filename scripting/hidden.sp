@@ -730,7 +730,6 @@ public Action:teamplay_round_win(
     PrintToServer("[%s] @teamplay_round_win", PLUGIN_NAME);
 #endif
 
-    pool_lock = false;
     MakeHiddenVisible(30.0);
 }
 
